@@ -1,9 +1,8 @@
 /**
  * fallbackSystem.js — 降级交互系统
  *
- * 统一调度 7 种降级交互模式：
- *   Mode 1: 手势识别（已实现 via gestureEngine）
- *   Mode 2: 左右滑动黄道带（已实现）
+ * 统一调度 6 种交互模式：
+ *   Mode 2: 左右滑动黄道带（已实现 via ZodiacCanvas）
  *   Mode 3: 点击节气卡片（已实现）
  *   Mode 4: 前后翻页按钮
  *   Mode 5: 摇一摇随机节气
@@ -11,46 +10,30 @@
  *   Mode 7: 日期选择器
  */
 
-import { detectTouch, detectMotion, detectCamera } from '../utils/device.js';
 import { getCurrentTermInfo } from '../business/calendar.js';
 
 /**
- * 检测设备能力并返回推荐的交互模式
- * @returns {{mode: string, level: number, capabilities: object}}
+ * 检测设备能力
+ * @returns {{touch: boolean, motion: boolean, weChat: boolean}}
  */
 export function detectCapabilities() {
-  const capabilities = {
-    camera: detectCamera(),
-    touch: detectTouch(),
-    motion: detectMotion(),
+  return {
+    touch: 'ontouchstart' in window,
+    motion: !!window.DeviceMotionEvent,
     weChat: /MicroMessenger/i.test(navigator.userAgent),
-    safari: /^((?!chrome|android).)*safari/i.test(navigator.userAgent),
     reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
   };
-
-  let mode = 'click';
-  let level = 3;
-
-  if (capabilities.camera && !capabilities.weChat) {
-    mode = 'gesture';
-    level = 1;
-  } else if (capabilities.touch) {
-    mode = 'swipe';
-    level = 2;
-  }
-
-  return { mode, level, capabilities };
 }
 
 /**
  * 激活前后翻页按钮（Mode 4）
- * 在详情页/黄道带页添加「上一个/下一个」导航
  * @param {string} page - 'zodiac' | 'detail'
  * @param {object} store
  * @param {Array} terms
  */
 export function enablePrevNextButtons(page, store, terms) {
-  const container = document.getElementById(page === 'zodiac' ? 'gesture-status-bar' : 'detail-footer-bar');
+  const containerId = page === 'zodiac' ? 'zodiac-page' : 'detail-footer-bar';
+  const container = document.getElementById(containerId);
   if (!container) return;
 
   const currentId = store.get('currentTermId') || terms[0]?.id || 1;
@@ -93,7 +76,6 @@ function navigateToTerm(termId, store, page) {
 
 /**
  * 激活摇一摇随机节气（Mode 5）
- * 使用 DeviceMotion API 检测加速度变化
  * @param {object} store
  * @param {Array} terms
  * @returns {Function} 清理函数
@@ -137,7 +119,6 @@ export function enableShakeToRandom(store, terms) {
 
 /**
  * 激活日期选择器（Mode 7）
- * 在页面底部添加日期选择器，选择日期后跳转到对应节气
  * @param {HTMLElement} container
  * @param {Array} terms
  * @returns {Function} 清理函数
@@ -170,7 +151,6 @@ export function enableDatePicker(container, terms) {
 
 /**
  * 激活拖拽节气到场景（Mode 6）
- * 在黄道带页面底部展示节气图标，可拖拽到中央区域触发详情
  * @param {HTMLElement} container
  * @param {Array} terms
  * @returns {Function} 清理函数
@@ -191,7 +171,6 @@ export function enableDragToNavigate(container, terms) {
     </div>
   `;
 
-  // 拖拽事件
   dragBar.querySelectorAll('.drag-term-chip').forEach(chip => {
     chip.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', chip.dataset.termId);
@@ -216,14 +195,11 @@ export function enableDragToNavigate(container, terms) {
     });
   }
 
-  return () => {
-    dragBar.remove();
-  };
+  return () => { dragBar.remove(); };
 }
 
 /**
  * 初始化降级交互系统
- * 根据设备能力自动选择并激活合适的交互模式
  * @param {object} store
  * @param {Array} terms
  * @param {string} page - 'zodiac' | 'detail'
@@ -238,23 +214,23 @@ export function initFallbackSystem(store, terms, page) {
   if (cleanup4) cleanups.push(cleanup4);
 
   // Mode 5: 摇一摇（支持 DeviceMotion）
-  if (capabilities.capabilities.motion && page === 'zodiac') {
+  if (capabilities.motion && page === 'zodiac') {
     const cleanup5 = enableShakeToRandom(store, terms);
     if (cleanup5) cleanups.push(cleanup5);
   }
 
   // Mode 6: 拖拽（仅黄道带页面）
   if (page === 'zodiac') {
-    const dragContainer = document.getElementById('gesture-status-bar');
+    const dragContainer = document.getElementById('zodiac-page');
     if (dragContainer) {
       const cleanup6 = enableDragToNavigate(dragContainer, terms);
       if (cleanup6) cleanups.push(cleanup6);
     }
   }
 
-  // Mode 7: 日期选择器（所有页面）
+  // Mode 7: 日期选择器
   const dateContainer = page === 'zodiac'
-    ? document.getElementById('gesture-status-bar')
+    ? document.getElementById('zodiac-page')
     : document.getElementById('detail-footer-bar');
   if (dateContainer) {
     const cleanup7 = enableDatePicker(dateContainer, terms);

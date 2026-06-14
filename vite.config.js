@@ -5,18 +5,7 @@ export default defineConfig({
   build: {
     target: 'es2015',
     cssCodeSplit: false,
-    assetsInlineLimit: 4096,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          tfjs: [
-            '@tensorflow/tfjs-core',
-            '@tensorflow/tfjs-backend-webgl'
-          ],
-          handpose: ['@tensorflow-models/handpose']
-        }
-      }
-    }
+    assetsInlineLimit: 4096
   },
   server: {
     host: true,
