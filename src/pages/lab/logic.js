@@ -42,21 +42,75 @@ export async function mount(store) {
     sundialCanvas.init();
   }
 
-  const select = document.getElementById('sundial-term-select');
-  if (select && terms.length) {
-    terms.forEach(term => {
-      const opt = document.createElement('option');
-      opt.value = term.id;
-      opt.textContent = `${term.name} (黄经 ${term.solarLongitude}°)`;
-      select.appendChild(opt);
+  const toggleBtn = document.getElementById('sundial-term-toggle');
+  const labelEl = document.getElementById('sundial-term-label');
+  const panel = document.getElementById('sundial-term-panel');
+  if (toggleBtn && panel && terms.length) {
+    // 按季节填充 term
+    const seasonMap = { spring: [], summer: [], autumn: [], winter: [] };
+    terms.forEach(t => {
+      if (t.id >= 1 && t.id <= 6) seasonMap.spring.push(t);
+      else if (t.id >= 7 && t.id <= 12) seasonMap.summer.push(t);
+      else if (t.id >= 13 && t.id <= 18) seasonMap.autumn.push(t);
+      else seasonMap.winter.push(t);
     });
+    Object.keys(seasonMap).forEach(season => {
+      const grid = panel.querySelector(`[data-season-terms="${season}"]`);
+      if (!grid) return;
+      grid.innerHTML = seasonMap[season].map(t => `
+        <button type="button" class="term-picker-chip" data-term-id="${t.id}" role="option">
+          <span class="term-picker-chip-name">${t.name}</span>
+          <span class="term-picker-chip-lon">${t.solarLongitude}°</span>
+        </button>
+      `).join('');
+    });
+
     const currentId = store.get('currentTermId') || 1;
-    select.value = currentId;
-    const initialTerm = terms.find(t => t.id === parseInt(select.value)) || terms[0];
-    renderSundial(initialTerm);
-    select.addEventListener('change', () => {
-      const term = terms.find(t => t.id === parseInt(select.value));
-      if (term) renderSundial(term);
+    const setActiveChip = (id) => {
+      panel.querySelectorAll('.term-picker-chip').forEach(c => {
+        c.classList.toggle('active', Number(c.dataset.termId) === id);
+      });
+    };
+    const applyTerm = (id) => {
+      const term = terms.find(t => t.id === id);
+      if (!term) return;
+      if (labelEl) labelEl.textContent = `${term.name} · 黄经 ${term.solarLongitude}°`;
+      setActiveChip(id);
+      renderSundial(term);
+    };
+    applyTerm(currentId);
+
+    // 打开/关闭面板
+    const closePanel = () => {
+      panel.hidden = true;
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.classList.remove('open');
+    };
+    const openPanel = () => {
+      panel.hidden = false;
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      toggleBtn.classList.add('open');
+      // 滚动到当前选中项
+      const active = panel.querySelector('.term-picker-chip.active');
+      if (active && typeof active.scrollIntoView === 'function') {
+        active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
+    };
+    toggleBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (panel.hidden) openPanel(); else closePanel();
+    });
+    document.addEventListener('click', (e) => {
+      if (!panel.hidden && !document.getElementById('sundial-term-picker').contains(e.target)) {
+        closePanel();
+      }
+    });
+    panel.addEventListener('click', (e) => {
+      const chip = e.target.closest('.term-picker-chip');
+      if (!chip) return;
+      const id = Number(chip.dataset.termId);
+      applyTerm(id);
+      closePanel();
     });
   }
 }

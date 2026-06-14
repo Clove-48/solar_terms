@@ -135,11 +135,11 @@ function updatePoetryDisplay(store, term) {
     infoEl.innerHTML = `
       <span class="float-info-term">${term.name}</span>
       <span class="float-info-sep">·</span>
-      <span style="font-size:13px;color:#8b5a2b;opacity:0.6;">${termType || ''}</span>
-      <span class="float-info-sep">·</span>
+      <span class="float-info-type" style="font-size:13px;color:#8b5a2b;opacity:0.6;">${termType || ''}</span>
+      <span class="float-info-sep float-info-type">·</span>
       <span class="float-info-date">${term.date}</span>
       <span class="float-info-sep">·</span>
-      <span class="float-info-lon">节气·黄经 ${term.solarLongitude}°</span>
+      <span class="float-info-lon">黄经 ${term.solarLongitude}°</span>
     `;
     infoEl.classList.remove('float-info-enter');
     void infoEl.offsetHeight;

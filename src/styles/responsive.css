@@ -63,26 +63,28 @@
 
   /* ── 浮动信息栏 ── */
   .float-info-bar {
-    font-size: 14px;
-    padding: 6px 14px;
-    top: 48px;
+    font-size: 13px;
+    padding: 6px 12px;
+    top: 44px;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: calc(100% - 20px);
-    left: 10px;
-    right: 10px;
-    display: flex;
+    max-width: calc(100% - 16px);
+    left: 8px !important;
+    right: 8px !important;
+    transform: none !important;
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
     flex-wrap: nowrap;
+    box-sizing: border-box;
   }
   .float-info-bar .float-info-sep {
     flex-shrink: 0;
   }
   .float-info-bar .float-info-term {
     flex-shrink: 0;
+    font-size: 14px;
   }
   .float-info-bar .float-info-date {
     flex-shrink: 0;
@@ -93,6 +95,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+  /* 移动端隐藏类型标签，保留关键信息 */
+  .float-info-bar .float-info-type {
+    display: none !important;
   }
 
   /* ── 按钮 ── */
@@ -108,29 +114,43 @@
     display: none !important;
   }
 
-  /* 科普解释面板：移动端底部居中显示 */
+  /* 科普解释面板：移动端顶部靠状态栏下方的可滚动卡片 */
   .poem-explanation {
-    display: block !important;
+    display: flex !important;
     position: fixed !important;
     left: 8px !important;
     right: 8px !important;
-    top: auto !important;
-    bottom: 60px !important;
+    top: 92px !important;
+    bottom: auto !important;
     max-width: none !important;
-    max-height: 200px !important;
+    max-height: 110px !important;
     transform: none !important;
-    font-size: 14px !important;
-    padding: 10px 14px !important;
-    z-index: 55 !important;
+    font-size: 12.5px !important;
+    line-height: 1.6 !important;
+    padding: 8px 12px !important;
+    z-index: 50 !important;
     overflow-y: auto !important;
     overscroll-behavior: contain !important;
     -webkit-overflow-scrolling: touch !important;
+    pointer-events: auto !important;
+    opacity: 0.95;
+    touch-action: pan-y;
+    background: rgba(245, 240, 232, 0.92) !important;
+    border: 1px solid rgba(139, 90, 43, 0.18) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 2px 10px rgba(60, 50, 40, 0.10) !important;
+    flex-direction: column;
+    gap: 4px;
+    align-items: flex-start;
+    text-align: left;
   }
 
   .poem-explanation.expl-left,
   .poem-explanation.expl-right {
     left: 8px !important;
     right: 8px !important;
+    top: 92px !important;
+    bottom: auto !important;
     transform: none !important;
   }
 
@@ -218,6 +238,12 @@
   .lab-data-label { font-size: 14px; }
   #lab-page canvas { height: 150px; }
   #lab-page .guo-detail-body { padding: 8px 10px; }
+
+  /* ── 节气选择器（移动端优化） ── */
+  .term-picker-btn { font-size: 13px; padding: 8px 12px; min-height: 40px; }
+  .term-picker-chip-name { font-size: 13px; }
+  .term-picker-chip-lon { font-size: 8.5px; }
+  .term-picker-panel { max-height: 280px; }
 
   /* ── 科学数据网格 ── */
   .data-grid .data-value { font-size: 18px; }

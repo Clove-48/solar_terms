@@ -88,21 +88,26 @@ export class ZodiacCanvas {
     this.ctx.scale(dpr, dpr);
 
     const screenW = rect.width;
+    const screenH = rect.height;
 
     // 移动端适配：缩小圆环，避免遮挡底部诗词
     if (screenW <= 480) {
-      this._baseRadius = Math.min(screenW, rect.height) * 0.32; // 与桌面端相同，不放大
-      this._scaleFactor = 0.65;
+      this._baseRadius = Math.min(screenW, screenH) * 0.32;
+      this._scaleFactor = 0.62;
+      // 移动端：科普面板占用了顶部 92+110=202px 区域，圆心向下偏移
+      this._mobileTopOffset = 102;
     } else if (screenW <= 768) {
-      this._baseRadius = Math.min(screenW, rect.height) * 0.35;
+      this._baseRadius = Math.min(screenW, screenH) * 0.35;
       this._scaleFactor = 0.82;
+      this._mobileTopOffset = 0;
     } else {
-      this._baseRadius = Math.min(screenW, rect.height) * 0.32;
+      this._baseRadius = Math.min(screenW, screenH) * 0.32;
       this._scaleFactor = 1.0;
+      this._mobileTopOffset = 0;
     }
 
     this.centerX = screenW / 2;
-    this.centerY = rect.height / 2 + 16;
+    this.centerY = screenH / 2 + 16 + this._mobileTopOffset;
     this.radius = this._baseRadius * this._zoomLevel;
 
     // 生成固定星点（在 Canvas 尺寸变化时重新生成）
@@ -324,32 +329,37 @@ export class ZodiacCanvas {
 
     // 四象 + 英文（响应式字号）
     const s = this._scaleFactor || 1;
-    const fourFontSize = Math.round(14 * s);
-    const fourEnSize = Math.round(7 * s);
+    const isMobileView = s < 0.8;
+    const fourFontSize = isMobileView ? Math.round(11 * s) : Math.round(14 * s);
+    const fourEnSize = Math.round(6 * s);
     const termFontSize = Math.round(10 * s);
     const curFontSize1 = Math.round(14 * s);
     const curFontSize2 = Math.round(8 * s);
     const lonTextSize = Math.round(8 * s);
-    const markRadius = 5 * s;
+    const markRadius = isMobileView ? 4 * s : 5 * s;
 
     fourSymbols.forEach(({ lon, label, en }) => {
       const a = this._getTermAngle(lon);
       if (a < Math.PI * 0.1 || a > Math.PI * 0.9) return;
-      const x = Math.cos(a) * (this.radius + 36 * s);
-      const y = Math.sin(a) * (this.radius + 36 * s);
+      // 移动端拉远四象与黄道带的距离，避免遮挡节点
+      const ringOffset = isMobileView ? 26 * s : 36 * s;
+      const x = Math.cos(a) * (this.radius + ringOffset);
+      const y = Math.sin(a) * (this.radius + ringOffset);
 
       // 四象名称
-      ctx.fillStyle = 'rgba(139, 90, 43, 0.65)';
+      ctx.fillStyle = 'rgba(139, 90, 43, 0.55)';
       ctx.font = `bold ${fourFontSize}px "Noto Serif SC", serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'bottom';
       ctx.fillText(label, x, y - 2);
 
-      // 英文小字
-      ctx.fillStyle = 'rgba(139, 90, 43, 0.3)';
-      ctx.font = `${fourEnSize}px "JetBrains Mono", monospace`;
-      ctx.textBaseline = 'top';
-      ctx.fillText(en, x, y + 2);
+      // 英文小字（移动端隐藏）
+      if (!isMobileView) {
+        ctx.fillStyle = 'rgba(139, 90, 43, 0.3)';
+        ctx.font = `${fourEnSize}px "JetBrains Mono", monospace`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(en, x, y + 2);
+      }
     });
 
     // ── ⑥ 28 星宿微点（作为背景装饰环绕黄道） ──
@@ -470,38 +480,49 @@ export class ZodiacCanvas {
     const currentTermInfo = this.terms.find(t => t.id === this.store.get('currentTermId'));
     if (currentTermInfo) {
       const s = currentTermInfo.science;
-      const seasonLabel = this._season === 'spring' ? '春' : this._season === 'summer' ? '夏' : this._season === 'autumn' ? '秋' : '冬';
+      const isMobileView = this._scaleFactor < 0.8;
 
-      // 太阳符号（适应浅色背景）
-      ctx.fillStyle = `rgba(180, 100, 40, ${0.12 + 0.04 * Math.sin(Date.now() / 3000)})`;
-      ctx.font = '36px "Noto Serif SC", serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('☀', 0, this.radius * 0.2);
+      // 太阳符号（移动端隐藏以节省空间）
+      if (!isMobileView) {
+        ctx.fillStyle = `rgba(180, 100, 40, ${0.12 + 0.04 * Math.sin(Date.now() / 3000)})`;
+        ctx.font = '36px "Noto Serif SC", serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('☀', 0, this.radius * 0.2);
+      }
 
-      // 科学数据流
-      const infoLines = [
-        `太阳黄经 ${currentTermInfo.solarLongitude}°`,
-        `赤纬 ${s.sunDeclination} · 昼 ${s.dayLength}`,
-        `圭表影 ${s.shadowLength} · 直射 ${s.directPoint}`,
-      ];
+      // 科学数据流（移动端只显示一行核心数据）
+      const infoLines = isMobileView
+        ? [`${currentTermInfo.solarLongitude}° · 昼${s.dayLength}`]
+        : [
+            `太阳黄经 ${currentTermInfo.solarLongitude}°`,
+            `赤纬 ${s.sunDeclination} · 昼 ${s.dayLength}`,
+            `圭表影 ${s.shadowLength} · 直射 ${s.directPoint}`,
+          ];
       infoLines.forEach((line, i) => {
-        const alpha = 0.3 - i * 0.06;
+        const alpha = isMobileView ? 0.42 : (0.3 - i * 0.06);
         ctx.fillStyle = `rgba(139, 90, 43, ${alpha})`;
-        ctx.font = i === 0 ? 'bold 11px "JetBrains Mono", monospace' : '9px "JetBrains Mono", monospace';
+        ctx.font = isMobileView
+          ? 'bold 11px "JetBrains Mono", monospace'
+          : (i === 0 ? 'bold 11px "JetBrains Mono", monospace' : '9px "JetBrains Mono", monospace');
         ctx.textAlign = 'center';
         ctx.textBaseline = 'bottom';
-        ctx.fillText(line, 0, this.radius * 0.32 + i * 14);
+        const yPos = isMobileView
+          ? this.radius * 0.30
+          : this.radius * 0.32 + i * 14;
+        ctx.fillText(line, 0, yPos);
       });
 
-      // 科学解说摘要
-      const breathAlpha = 0.2 + 0.08 * Math.sin(Date.now() / 4000);
-      ctx.fillStyle = `rgba(60, 50, 40, ${breathAlpha})`;
-      ctx.font = '10px "Noto Sans SC", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      const descText = s.description.length > 30 ? s.description.slice(0, 30) + '...' : s.description;
-      ctx.fillText(descText, 0, this.radius * 0.72);
+      // 科学解说摘要（移动端隐藏，避免拥挤）
+      if (!isMobileView) {
+        const breathAlpha = 0.2 + 0.08 * Math.sin(Date.now() / 4000);
+        ctx.fillStyle = `rgba(60, 50, 40, ${breathAlpha})`;
+        ctx.font = '10px "Noto Sans SC", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        const descText = s.description.length > 30 ? s.description.slice(0, 30) + '...' : s.description;
+        ctx.fillText(descText, 0, this.radius * 0.72);
+      }
     }
 
     ctx.restore();
@@ -529,14 +550,52 @@ export class ZodiacCanvas {
     const rect = this.canvas.getBoundingClientRect();
     const x = event.clientX - rect.left - this.centerX;
     const y = event.clientY - rect.top - this.centerY;
+
+    // 移动端使用更严格的命中半径，避免误触相邻节点
+    const isMobile = (this._scaleFactor || 1) < 0.8;
+    const hitRadius = isMobile ? 22 : 30;
+
+    // 计算点击点到圆心的角度
+    const clickDist = Math.hypot(x, y);
+    if (clickDist < 1) return null;
+    const clickAngle = Math.atan2(y, x);
+
+    // 收集所有可见的 term
+    const visibleTerms = [];
     for (const term of this.terms) {
       const angle = this._getTermAngle(term.solarLongitude);
       if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) continue;
       const tx = Math.cos(angle) * this.radius;
       const ty = Math.sin(angle) * this.radius;
-      if (distance(x, y, tx, ty) < 30) return term;
+      const pixelDist = distance(x, y, tx, ty);
+
+      // 计算点击方向与 term 节点方向的角差（用于 tie-break）
+      const termAngle = Math.atan2(ty, tx);
+      let angleDiff = Math.abs(clickAngle - termAngle);
+      if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
+
+      visibleTerms.push({ term, pixelDist, angleDiff });
     }
-    return null;
+
+    // 先按像素距离筛选在 hitRadius 内的节点
+    let candidates = visibleTerms.filter(v => v.pixelDist < hitRadius);
+
+    // 如果没有候选，尝试用角距离作为扩展匹配（用于点击黄道带附近但不在节点上的情况）
+    if (candidates.length === 0) {
+      // 仅匹配角度足够接近（且点击距离圆环不太远）
+      const ringTolerance = isMobile ? 18 : 22;
+      const ringDist = Math.abs(clickDist - this.radius);
+      if (ringDist > ringTolerance) return null;
+      candidates = visibleTerms
+        .map(v => ({ ...v, score: v.angleDiff }))
+        .filter(v => v.score < (isMobile ? 0.10 : 0.12));
+    }
+
+    if (candidates.length === 0) return null;
+
+    // 取像素距离最近的；如果有多个非常接近的，用角距离辅助选择
+    candidates.sort((a, b) => a.pixelDist - b.pixelDist);
+    return candidates[0].term;
   }
 
   destroy() {

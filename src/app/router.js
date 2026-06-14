@@ -172,9 +172,29 @@ const PAGES = {
           <canvas id="sundial-canvas" style="width:100%;height:200px;margin-bottom:var(--spacing-md);border-radius:var(--radius-sm);"></canvas>
           <div style="display:flex;align-items:center;gap:var(--spacing-sm);">
             <span class="text-muted" style="font-size:13px;white-space:nowrap;color:var(--accent-gold);">选择节气</span>
-            <div class="sundial-select-wrap" style="position:relative;flex:1;">
-              <select id="sundial-term-select" class="sundial-select"></select>
-              <span class="sundial-select-arrow" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--accent-gold);font-size:10px;">▼</span>
+            <div class="term-picker" id="sundial-term-picker" style="flex:1;">
+              <button type="button" class="term-picker-btn" id="sundial-term-toggle" aria-haspopup="listbox" aria-expanded="false">
+                <span class="term-picker-label" id="sundial-term-label">—</span>
+                <span class="term-picker-arrow" aria-hidden="true">▾</span>
+              </button>
+              <div class="term-picker-panel" id="sundial-term-panel" role="listbox" hidden>
+                <div class="term-picker-season" data-season="spring">
+                  <span class="term-picker-season-label">春</span>
+                  <div class="term-picker-grid" data-season-terms="spring"></div>
+                </div>
+                <div class="term-picker-season" data-season="summer">
+                  <span class="term-picker-season-label">夏</span>
+                  <div class="term-picker-grid" data-season-terms="summer"></div>
+                </div>
+                <div class="term-picker-season" data-season="autumn">
+                  <span class="term-picker-season-label">秋</span>
+                  <div class="term-picker-grid" data-season-terms="autumn"></div>
+                </div>
+                <div class="term-picker-season" data-season="winter">
+                  <span class="term-picker-season-label">冬</span>
+                  <div class="term-picker-grid" data-season-terms="winter"></div>
+                </div>
+              </div>
             </div>
           </div>
           <p class="body-science" style="margin-top:var(--spacing-md);font-size:13px;color:var(--muted-ink);line-height:1.6;">
