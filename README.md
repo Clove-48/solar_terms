@@ -1,93 +1,105 @@
-﻿# 榛勯亾鎵嬫湱 路 Ecliptic Notes
+# 黄道手札 · Ecliptic Notes
 
-> 浠ュお闃抽粍缁忎负绉戝涓荤嚎锛屾矇娴稿紡鎺㈢储浜屽崄鍥涜妭姘?
+> 以太阳黄经为科学主线，沉浸式探索二十四节气
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Vite](https://img.shields.io/badge/vite-6.x-646CFF.svg)](https://vitejs.dev)
+[![GitHub Pages](https://img.shields.io/badge/deployed-GitHub%20Pages-blueviolet.svg)](https://clove-48.github.io/solar_terms/)
 
-涓€娆惧熀浜庡師鐢熷墠绔妧鏈爤鐨勮交閲忕骇 H5 搴旂敤锛屼互**澶槼榛勭粡**涓虹瀛︿富绾匡紝閫氳繃瑙︽帶浜や簰娌夋蹈寮忔帰绱簩鍗佸洓鑺傛皵鑳屽悗鐨勫ぉ鏂囧師鐞嗕笌姘戜織鏂囧寲銆?
-鎵€鏈夎绠楀湪娴忚鍣ㄦ湰鍦板畬鎴愶紝闆跺悗绔緷璧栵紝鏃犳暟鎹笂浼犮€?
-## 鏍稿績鐗规€?
-| 鐗规€?| 璇存槑 |
+一款基于原生前端技术栈的轻量级 H5 应用，以**太阳黄经**为科学主线，通过触控交互沉浸式探索二十四节气背后的天文原理与民俗文化。
+
+所有计算在浏览器本地完成，零后端依赖，无数据上传。
+
+## 核心特性
+
+| 特性 | 说明 |
 |------|------|
-| **鍔ㄦ€侀粍閬撳甫** | Canvas 2D 娓叉煋 0掳~360掳 榛勯亾杞ㄩ亾锛岀偣鍑昏妭姘旂洿杈捐鎯?|
-| **鍙屾爣绛捐鎯?* | 姣忎釜鑺傛皵鍚€愮瀛︺€戝拰銆愭皯淇椼€戜袱涓爣绛鹃〉锛屼竴閿垏鎹㈣瑙?|
-| **绉戝瀹為獙瀹?* | 鍦〃娴嬪奖 + 鏃ユ櫡妯℃嫙锛屽疄鏃惰绠楀お闃宠丹绾€侀珮搴﹁銆佸奖闀?|
-| **瀹炴椂鏍″噯** | 鏄剧ず浠婃棩鎵€澶勮妭姘斻€侀粍缁忚搴︺€佽窛涓嬩釜鑺傛皵澶╂暟 |
-| **鍦烘櫙寮曟搸** | 鍥涘鑺傛皵涓撳睘绮掑瓙鍔ㄧ敾锛堣姳鐡?鐑堟棩/钀藉彾/闆姳锛?|
-| **绋嬪簭鍖栭煶鏁?* | Web Audio API 鍚堟垚鏄ラ浄銆佽潐楦ｃ€佺椋庛€佸啲闆０ |
-| **闄嶇骇浜や簰** | 婊戝姩鈫掔偣鍑烩啋缈婚〉鈫掓憞涓€鎽団啋鎷栨嫿鈫掓棩鏈熼€夋嫨鍣?|
-| **姘旇薄绉戞櫘瑙嗛** | 宓屽叆涓浗姘旇薄灞€鑺傛皵绉戞櫘鍔ㄧ敾锛圔绔欏悎闆嗭級 |
+| **动态黄道带** | Canvas 2D 渲染 0°~360° 黄道轨道，点击节气直达详情 |
+| **双标签详情** | 每个节气含【科学】和【民俗】两个标签页，一键切换视角 |
+| **科学实验室** | 圭表测影 + 日晷模拟，实时计算太阳赤纬、高度角、影长 |
+| **实时校准** | 显示今日所处节气、黄经角度、距下个节气天数 |
+| **场景引擎** | 四季节气专属粒子动画（花瓣/烈日/落叶/雪花） |
+| **程序化音效** | Web Audio API 合成春雷、蝉鸣、秋风、冬雪声 |
+| **交互方式** | 点击→滑动→翻页→摇一摇→拖拽→日期选择器 |
+| **气象科普视频** | 嵌入中国气象局节气科普动画（B站合集） |
 
-## 鎶€鏈爤
+## 技术栈
 
-- **妗嗘灦**: 鍘熺敓 HTML/CSS/JS + Canvas 2D
-- **鏋勫缓**: Vite 6
-- **闊抽**: Web Audio API锛堢▼搴忓寲鍚堟垚锛?- **鏍峰紡**: CSS Custom Properties + Grid/Flexbox
-- **瀛椾綋**: Noto Serif/Sans SC + Exo + JetBrains Mono
+- **框架**: 原生 HTML/CSS/JS + Canvas 2D
+- **构建**: Vite 6
+- **音频**: Web Audio API（程序化合成）
+- **样式**: CSS Custom Properties + Grid/Flexbox
+- **字体**: Noto Serif/Sans SC + Exo + JetBrains Mono
 
-## 蹇€熷紑濮?
+## 快速开始
+
 ```bash
-# 瀹夎渚濊禆
+# 安装依赖
 npm install
 
-# 鍚姩寮€鍙戞湇鍔″櫒
+# 启动开发服务器
 npm run dev
 
-# 鏋勫缓鐢熶骇鐗堟湰
+# 构建生产版本
 npm run build
 
-# 棰勮鏋勫缓缁撴灉
+# 预览构建结果
 npm run preview
 ```
 
-## 椤圭洰缁撴瀯
+## 项目结构
 
 ```
 solar_terms/
-鈹溾攢鈹€ index.html              # 鍏ュ彛 HTML
-鈹溾攢鈹€ vite.config.js          # Vite 閰嶇疆
-鈹溾攢鈹€ package.json            # 渚濊禆绠＄悊
-鈹溾攢鈹€ data/
-鈹?  鈹溾攢鈹€ solarTerms.json     # 24鑺傛皵瀹屾暣鏁版嵁闆?鈹?  鈹斺攢鈹€ poems.json          # 鑺傛皵鍙よ瘲璇?鈹溾攢鈹€ scripts/
-鈹?  鈹斺攢鈹€ calc_solar_data.py  # 澶╂枃鏁版嵁楠岃瘉鑴氭湰
-鈹斺攢鈹€ src/
-    鈹溾攢鈹€ main.js             # 搴旂敤鍏ュ彛
-    鈹溾攢鈹€ app/                # 璺敱 + 鐘舵€佺鐞?+ 浜嬩欢鎬荤嚎
-    鈹溾攢鈹€ pages/              # 4涓〉闈?(loading/zodiac/detail/lab)
-    鈹溾攢鈹€ interaction/        # 闄嶇骇浜や簰绯荤粺
-    鈹溾攢鈹€ business/           # 澶╂枃璁＄畻 + 闊虫晥鍚堟垚
-    鈹溾攢鈹€ renderer/           # Canvas 娓叉煋 + 鍦烘櫙寮曟搸
-    鈹溾攢鈹€ styles/             # 7涓狢SS妯″潡
-    鈹斺攢鈹€ utils/              # 7涓伐鍏锋ā鍧?```
+├── index.html              # 入口 HTML
+├── vite.config.js          # Vite 配置
+├── package.json            # 依赖管理
+├── data/
+│   ├── solarTerms.json     # 24节气完整数据集
+│   └── poems.json          # 节气古诗词
+├── scripts/
+│   └── calc_solar_data.py  # 天文数据验证脚本
+└── src/
+    ├── main.js             # 应用入口
+    ├── app/                # 路由 + 状态管理 + 事件总线
+    ├── pages/              # 4个页面 (loading/zodiac/detail/lab)
+    ├── interaction/        # 交互辅助系统
+    ├── business/           # 天文计算 + 音效合成
+    ├── renderer/           # Canvas 渲染 + 场景引擎
+    ├── styles/             # 7个CSS模块
+    └── utils/              # 7个工具模块
+```
 
-## 椤甸潰瀵艰埅
+## 页面导航
 
-| 椤甸潰 | 璺敱 | 鍔熻兘 |
+| 页面 | 路由 | 功能 |
 |------|------|------|
-| 鍔犺浇椤?| `#/loading` | 鍔犺浇鑺傛皵鏁版嵁锛屾樉绀鸿繘搴︾幆 |
-| 榛勯亾甯?| `#/zodiac` | 榛勯亾杞ㄩ亾鍙鍖栵紝鐐瑰嚮鑺傛皵杩涘叆璇︽儏 |
-| 鑺傛皵璇︽儏 | `#/detail?id=N` | 绉戝/姘戜織鍙屾爣绛撅紝鍚鏅棰?|
-| 绉戝瀹為獙瀹?| `#/lab` | 鍦〃娴嬪奖 + 鏃ユ櫡妯℃嫙浜掑姩瀹為獙 |
+| 加载页 | `#/loading` | 加载节气数据，显示进度环 |
+| 黄道带 | `#/zodiac` | 黄道轨道可视化，点击节气进入详情 |
+| 节气详情 | `#/detail?id=N` | 科学/民俗双标签，含科普视频 |
+| 科学实验室 | `#/lab` | 圭表测影 + 日晷模拟互动实验 |
 
-## 娴忚鍣ㄥ吋瀹?
-| 鐗规€?| Chrome | Safari | Firefox | WeChat |
+## 浏览器兼容
+
+| 特性 | Chrome | Safari | Firefox | WeChat |
 |------|--------|--------|---------|--------|
-| Canvas 2D | 鉁?| 鉁?| 鉁?| 鉁?|
-| 瑙︽帶浜や簰 | 鉁?| 鉁?| 鉁?| 鉁?|
-| 闄嶇骇浜や簰 | 鉁?| 鉁?| 鉁?| 鉁?|
+| Canvas 2D | ✅ | ✅ | ✅ | ✅ |
+| 触控交互 | ✅ | ✅ | ✅ | ✅ |
 
-## 鏂囨。
+## 文档
 
-- [浜у搧闇€姹傛枃妗?(PRD)](.trae/documents/PRD-鑺傛皵绉戞櫘娌夋蹈寮廐5.md)
-- [鎶€鏈灦鏋勬枃妗(.trae/documents/鎶€鏈灦鏋?鑺傛皵绉戞櫘娌夋蹈寮廐5.md)
-- [寮€鍙?Checklist](.trae/documents/寮€鍙慍hecklist-鑺傛皵绉戞櫘娌夋蹈寮廐5.md)
+- [产品需求文档 (PRD)](.trae/documents/PRD-节气科普沉浸式H5.md)
+- [技术架构文档](.trae/documents/技术架构-节气科普沉浸式H5.md)
+- [开发 Checklist](.trae/documents/开发Checklist-节气科普沉浸式H5.md)
 
-## 璁捐鐞嗗康
+## 设计理念
 
-**銆屽浗椋庣鎶€銆?* 鈥斺€?浠?Academia锛堝闄㈤锛変负浼犵粺鏂囧寲鍩哄簳 脳 Modern Dark锛堢幇浠ｆ繁鑹叉ā寮忥級涓虹鎶€瑙嗚楠ㄦ灦锛岃瀺鍚?Chinese Simplified 涓枃瀛椾綋鐢熸€併€?
-- 鑹插僵锛氭繁绌鸿摑榛?(#0a0e1a) + 閲戣壊 (#d4a574) + 鏈辩爞绾?(#c23b22)
-- 瀛椾綋锛歂oto Serif SC锛堣‖绾?鍥介锛? Noto Sans SC锛堟棤琛嚎/绉戞妧锛? JetBrains Mono锛堢瓑瀹?鏁版嵁锛?- 瑁呴グ锛氬洓璞℃爣娉?+ 28鏄熷 + 鍗扮珷寮忛瀛?+ 鍗疯酱寮忓崱鐗?
+**「国风科技」** —— 以 Academia（学院风）为传统文化基底 × Modern Dark（现代深色模式）为科技视觉骨架，融合 Chinese Simplified 中文字体生态。
+
+- 色彩：深空蓝黑 (#0a0e1a) + 金色 (#d4a574) + 朱砂红 (#c23b22)
+- 字体：Noto Serif SC（衬线/国风）+ Noto Sans SC（无衬线/科技）+ JetBrains Mono（等宽/数据）
+- 装饰：四象标注 + 28星宿 + 印章式首字 + 卷轴式卡片
+
 ## License
 
 MIT
-
