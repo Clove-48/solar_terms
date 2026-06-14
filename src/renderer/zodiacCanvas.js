@@ -330,7 +330,7 @@ export class ZodiacCanvas {
     const curFontSize1 = Math.round(14 * s);
     const curFontSize2 = Math.round(8 * s);
     const lonTextSize = Math.round(8 * s);
-    const markRadius = 3.5 * s;
+    const markRadius = 5 * s;
 
     fourSymbols.forEach(({ lon, label, en }) => {
       const a = this._getTermAngle(lon);
@@ -534,7 +534,7 @@ export class ZodiacCanvas {
       if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) continue;
       const tx = Math.cos(angle) * this.radius;
       const ty = Math.sin(angle) * this.radius;
-      if (distance(x, y, tx, ty) < 20) return term;
+      if (distance(x, y, tx, ty) < 30) return term;
     }
     return null;
   }

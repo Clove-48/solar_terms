@@ -66,6 +66,33 @@
     font-size: 14px;
     padding: 6px 14px;
     top: 48px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: calc(100% - 20px);
+    left: 10px;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    flex-wrap: nowrap;
+  }
+  .float-info-bar .float-info-sep {
+    flex-shrink: 0;
+  }
+  .float-info-bar .float-info-term {
+    flex-shrink: 0;
+  }
+  .float-info-bar .float-info-date {
+    flex-shrink: 0;
+  }
+  .float-info-bar .float-info-lon {
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* ── 按钮 ── */
@@ -90,11 +117,14 @@
     top: auto !important;
     bottom: 60px !important;
     max-width: none !important;
-    max-height: 160px !important;
+    max-height: 200px !important;
     transform: none !important;
     font-size: 14px !important;
     padding: 10px 14px !important;
     z-index: 55 !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain !important;
+    -webkit-overflow-scrolling: touch !important;
   }
 
   .poem-explanation.expl-left,
@@ -163,8 +193,24 @@
   .guo-visual-value { font-size: 16px; }
 
   /* ── 详情页左右导航 ── */
-  .guo-term-nav { margin-top: var(--spacing-md); }
-  .guo-term-nav-btn { font-size: 13px; padding: 8px 12px; }
+  .guo-term-nav {
+    margin-top: var(--spacing-md);
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .guo-term-nav-btn {
+    font-size: 13px;
+    padding: 10px 12px;
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    border-radius: var(--radius-sm);
+  }
+  .guo-term-nav-btn svg {
+    flex-shrink: 0;
+  }
 
   /* ── 实验室 ── */
   .lab-data-card { padding: 10px 12px; }

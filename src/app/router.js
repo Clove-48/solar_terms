@@ -57,10 +57,10 @@ const PAGES = {
       <canvas id="zodiac-canvas" style="flex:1;touch-action:none;position:relative;z-index:10;"></canvas>
 
       <footer class="footer-fixed" style="display:flex;align-items:center;justify-content:center;padding:var(--spacing-sm) var(--spacing-md);z-index:20;">
-        <button id="btn-lab-entry" class="btn btn-ghost touch-target" style="font-size:12px;">科学实验室</button>
+        <button id="btn-lab-entry" class="btn btn-ghost touch-target" style="font-size:13px;">⏄ 科学实验室</button>
       </footer>
     </div>
-    <!-- 科普解释面板（移到页面容器外，避免 overflow:hidden 裁剪） -->
+    <!-- 科普解释面板（移动端底部吸底显示） -->
     <div id="poem-explanation" class="poem-explanation"></div>
   `,
   detail: `
@@ -109,7 +109,7 @@ const PAGES = {
     <div class="page-fullscreen flex-col" id="lab-page">
       <header class="header-fixed" style="display:flex;align-items:center;gap:var(--spacing-md);">
         <button id="btn-lab-back" class="touch-target data-label" style="color:var(--accent-gold);">← 返回</button>
-        <h2 class="science-title" style="flex:1;color:var(--foreground-primary);">科 学 实 验 室</h2>
+        <h2 class="science-title" style="flex:1;color:var(--foreground-primary);">循时 · 科学实验室</h2>
       </header>
       <div class="hide-scrollbar" style="flex:1;overflow-y:auto;padding:80px var(--spacing-md) var(--spacing-md);">
         <!-- 圭表测影 -->
@@ -171,8 +171,11 @@ const PAGES = {
           </div>
           <canvas id="sundial-canvas" style="width:100%;height:200px;margin-bottom:var(--spacing-md);border-radius:var(--radius-sm);"></canvas>
           <div style="display:flex;align-items:center;gap:var(--spacing-sm);">
-            <span class="text-muted" style="font-size:11px;white-space:nowrap;">选择节气：</span>
-            <select id="sundial-term-select" style="flex:1;background:var(--bg-elevated);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:var(--foreground-primary);font-family:var(--font-sans);font-size:12px;padding:var(--spacing-xs) var(--spacing-sm);outline:none;"></select>
+            <span class="text-muted" style="font-size:13px;white-space:nowrap;color:var(--accent-gold);">选择节气</span>
+            <div class="sundial-select-wrap" style="position:relative;flex:1;">
+              <select id="sundial-term-select" class="sundial-select"></select>
+              <span class="sundial-select-arrow" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--accent-gold);font-size:10px;">▼</span>
+            </div>
           </div>
           <p class="body-science" style="margin-top:var(--spacing-md);font-size:13px;color:var(--muted-ink);line-height:1.6;">
             选择不同节气，观察日晷指针阴影随太阳高度角的变化。

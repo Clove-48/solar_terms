@@ -54,6 +54,9 @@ solar_terms/
 ├── index.html              # 入口 HTML
 ├── vite.config.js          # Vite 配置
 ├── package.json            # 依赖管理
+├── .github/
+│   └── workflows/
+│       └── deploy.yml      # GitHub Pages 自动部署
 ├── data/
 │   ├── solarTerms.json     # 24节气完整数据集
 │   └── poems.json          # 节气古诗词
