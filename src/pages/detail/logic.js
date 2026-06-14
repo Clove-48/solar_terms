@@ -238,14 +238,14 @@ function renderRichFolk(term, allTerms) {
     <div class="guo-folk-scroll guo-detail-enter">
       <div class="guo-folk-label">物候现象</div>
       <p class="guo-folk-text">${f.phenomena}</p>
-      <div style="margin-top:var(--spacing-sm);font-size:11px;color:var(--muted-ink);font-family:var(--font-sans);line-height:1.6;opacity:0.7;">
+      <div style="margin-top:var(--spacing-sm);font-size:14px;color:var(--muted-ink);font-family:var(--font-sans);line-height:1.6;opacity:0.7;">
         <em>古人通过观察自然界的动植物变化来判定节气，称为"物候"。</em>
       </div>
     </div>
     <div class="guo-folk-scroll">
       <div class="guo-folk-label">农事活动</div>
       <p class="guo-folk-text">${f.agriculture}</p>
-      <div style="margin-top:var(--spacing-sm);font-size:11px;color:var(--muted-ink);font-family:var(--font-sans);line-height:1.6;opacity:0.7;">
+      <div style="margin-top:var(--spacing-sm);font-size:14px;color:var(--muted-ink);font-family:var(--font-sans);line-height:1.6;opacity:0.7;">
         <em>二十四节气起源于黄河流域，是指导农业生产的重要历法补充。</em>
       </div>
     </div>

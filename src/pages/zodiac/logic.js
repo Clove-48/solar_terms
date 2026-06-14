@@ -135,7 +135,7 @@ function updatePoetryDisplay(store, term) {
     infoEl.innerHTML = `
       <span class="float-info-term">${term.name}</span>
       <span class="float-info-sep">·</span>
-      <span style="font-size:10px;color:#8b5a2b;opacity:0.6;">${termType || ''}</span>
+      <span style="font-size:13px;color:#8b5a2b;opacity:0.6;">${termType || ''}</span>
       <span class="float-info-sep">·</span>
       <span class="float-info-date">${term.date}</span>
       <span class="float-info-sep">·</span>

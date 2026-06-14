@@ -45,7 +45,7 @@
   --fs-title: clamp(20px, 5vw, 28px);
   --fs-body: 16px;
   --fs-small: 14px;
-  --fs-label: clamp(12px, 3vw, 14px);
+  --fs-label: clamp(13px, 3.5vw, 14px);
 
   /* ----- 行高 ----- */
   --lh-display: 1.2;
