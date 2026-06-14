@@ -61,7 +61,7 @@ export async function mount(store) {
     location.hash = '#lab';
   });
 
-  // 初始化降级交互系统（前后翻页、摇一摇、拖拽、日期选择器）
+  // 初始化交互辅助系统（前后翻页、摇一摇、拖拽、日期选择器）
   _fallbackCleanup = initFallbackSystem(store, terms, 'zodiac');
 
   // 监听 currentTermId 变化

@@ -1,5 +1,5 @@
 /**
- * fallbackSystem.js — 降级交互系统
+ * fallbackSystem.js — 交互辅助系统
  *
  * 统一调度 6 种交互模式：
  *   Mode 2: 左右滑动黄道带（已实现 via ZodiacCanvas）
@@ -199,11 +199,11 @@ export function enableDragToNavigate(container, terms) {
 }
 
 /**
- * 初始化降级交互系统
+ * 初始化交互辅助系统
  * @param {object} store
  * @param {Array} terms
  * @param {string} page - 'zodiac' | 'detail'
- * @returns {Function} 清理所有降级交互的函数
+ * @returns {Function} 清理所有交互辅助的函数
  */
 export function initFallbackSystem(store, terms, page) {
   const capabilities = detectCapabilities();

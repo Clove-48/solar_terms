@@ -13,7 +13,7 @@ export async function mount(store, queryString = '') {
   const params = new URLSearchParams(queryString || '');
   let termId = null;
 
-  // 兼容多种参数名：id（详情页内部跳转）、term（降级交互系统）
+  // 兼容多种参数名：id（详情页内部跳转）、term（交互系统传入）
   const idParam = params.get('id') ?? params.get('term');
   if (idParam !== null) {
     termId = Number(idParam);
@@ -76,7 +76,7 @@ export async function mount(store, queryString = '') {
 
   addNavigation(term, terms, store);
 
-  // 初始化降级交互系统（前后翻页、日期选择器）
+  // 初始化交互辅助系统（前后翻页、日期选择器）
   _fallbackCleanup = initFallbackSystem(store, terms, 'detail');
 }
 
@@ -733,6 +733,6 @@ export function unmount() {
     container._videoObserver.disconnect();
     container._videoObserver = null;
   }
-  // 清理降级交互
+  // 清理交互辅助
   if (_fallbackCleanup) { _fallbackCleanup(); _fallbackCleanup = null; }
 }
