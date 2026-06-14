@@ -1,0 +1,54 @@
+/* ==========================================
+   typography.css — 字体系统
+   基于 typography.csv #25 (Chinese Simplified)
+   + #24 (Chinese Traditional) + #47 (Science/Tech)
+   ========================================== */
+
+/* 节气名称（展示）- 国风衬线 */
+.display-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: 0.05em;
+}
+
+/* 科学数据标题 - 科技无衬线 */
+.science-title {
+  font-family: var(--font-sans-tech);
+  font-weight: 600;
+  font-size: var(--fs-title);
+  line-height: var(--lh-title);
+}
+
+/* 正文（科学） */
+.body-science {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+/* 正文（民俗） */
+.body-folk {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--fs-body);
+  line-height: var(--lh-folk);
+}
+
+/* 黄经/数据标签 - 等宽 */
+.data-label {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: var(--fs-label);
+  line-height: var(--lh-mono);
+}
+
+/* 辅助文字 */
+.text-muted {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--fs-small);
+  color: var(--muted-ink);
+}

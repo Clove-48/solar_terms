@@ -1,0 +1,78 @@
+/* ==========================================
+   tokens.css — 设计令牌体系 (Design Tokens)
+   基于项目 ui-ux-pro-max-skill 设计数据集
+   参考: colors.csv #9 (Educational App)
+         typography.csv #25, #24, #47
+   ========================================== */
+
+:root {
+  /* ----- 色彩系统 ----- */
+  --bg-deep: #f5f0e8;
+  --bg-elevated: #efe8d8;
+  --bg-warm: #e8dfcc;
+  --foreground-primary: #3a3028;
+  --foreground-warm: #4a3f35;
+  --accent-gold: #8b5a2b;
+  --accent-red: #c23b22;
+  --accent-cyan: #4a6e8a;
+  --border-subtle: rgba(60, 50, 40, 0.08);
+  --border-warm: #c4b8a8;
+  --surface-glass: rgba(245, 240, 232, 0.7);
+  --muted-ink: #7a6a5a;
+
+  /* ----- 间距系统 (8dp 增量) ----- */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+
+  /* ----- 圆角系统 ----- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+
+  /* ----- 字体家族 ----- */
+  --font-display: 'Noto Serif SC', 'SimSun', serif;
+  --font-sans: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+  --font-sans-tech: 'Exo', 'Noto Sans SC', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+
+  /* ----- 字号层级 ----- */
+  --fs-display: clamp(36px, 8vw, 48px);
+  --fs-title: clamp(20px, 5vw, 28px);
+  --fs-body: 16px;
+  --fs-small: 14px;
+  --fs-label: clamp(12px, 3vw, 14px);
+
+  /* ----- 行高 ----- */
+  --lh-display: 1.2;
+  --lh-title: 1.3;
+  --lh-body: 1.6;
+  --lh-folk: 1.7;
+  --lh-mono: 1.4;
+
+  /* ----- 过渡 ----- */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 200ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+}
+
+/* 民俗标签页覆盖令牌（通过 .folk-mode 类切换） */
+.folk-mode {
+  --bg-page: var(--bg-deep);
+  --fg-primary: var(--foreground-primary);
+  --border-default: var(--border-warm);
+  --surface-card: #efe8d8;
+}
+
+/* 科学标签页默认令牌 */
+.science-mode {
+  --bg-page: var(--bg-deep);
+  --fg-primary: var(--foreground-primary);
+  --border-default: var(--border-subtle);
+  --surface-card: rgba(245, 240, 232, 0.6);
+}

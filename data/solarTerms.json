@@ -1,0 +1,626 @@
+[
+  {
+    "id": 1,
+    "name": "立春",
+    "pinyin": "lichun",
+    "date": "2月3日-5日",
+    "solarLongitude": 315,
+    "science": {
+      "sunDeclination": "-16.3°",
+      "dayLength": "10h29m",
+      "shadowLength": "9.65尺",
+      "directPoint": "南纬16.3°",
+      "description": "太阳黄经315°。太阳直射南纬16.3°，北半球中纬度地区昼长10h29m。以8尺圭表测影，正午影长9.65尺。"
+    },
+    "folk": {
+      "phenomena": "东风解冻，蛰虫始振，鱼陟负冰",
+      "agriculture": "春耕备耕开始，修整农具",
+      "customs": "迎春、咬春（吃春饼/萝卜）、打春牛",
+      "description": "立春为二十四节气之首，标志着冬季结束、春季开始。'立'即开始之意，此时万物复苏，春意渐浓。"
+    },
+    "animation": {
+      "gestureType": "fist",
+      "particleColor": "#4CAF50",
+      "soundEffect": "spring_thunder",
+      "scene": "budding"
+    }
+  },
+  {
+    "id": 2,
+    "name": "雨水",
+    "pinyin": "yushui",
+    "date": "2月18日-20日",
+    "solarLongitude": 330,
+    "science": {
+      "sunDeclination": "-11.5°",
+      "dayLength": "10h57m",
+      "shadowLength": "8.13尺",
+      "directPoint": "南纬11.5°",
+      "description": "太阳黄经330°。太阳直射南纬11.5°，北半球中纬度地区昼长10h57m。以8尺圭表测影，正午影长8.13尺。"
+    },
+    "folk": {
+      "phenomena": "獭祭鱼，鸿雁来，草木萌动",
+      "agriculture": "麦田追肥，果园修剪",
+      "customs": "回娘家（川西习俗）、拉保保（找干爹）",
+      "description": "雨水节气意味着降雨开始增多，'春雨贵如油'，适宜的降水对农作物生长至关重要。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 3,
+    "name": "惊蛰",
+    "pinyin": "jingzhe",
+    "date": "3月5日-7日",
+    "solarLongitude": 345,
+    "science": {
+      "sunDeclination": "-5.9°",
+      "dayLength": "11h28m",
+      "shadowLength": "6.69尺",
+      "directPoint": "南纬5.9°",
+      "description": "太阳黄经345°。太阳直射南纬5.9°，北半球中纬度地区昼长11h28m。以8尺圭表测影，正午影长6.69尺。"
+    },
+    "folk": {
+      "phenomena": "桃始华，仓庚鸣，鹰化为鸠",
+      "agriculture": "春耕全面展开，防虫害",
+      "customs": "祭白虎、打小人、吃梨润肺",
+      "description": "惊蛰时春雷乍动，惊醒冬眠的昆虫。'惊蛰'之名反映了古人对自然现象的观察——春雷惊醒了蛰伏的动物。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 4,
+    "name": "春分",
+    "pinyin": "chunfen",
+    "date": "3月20日-22日",
+    "solarLongitude": 0,
+    "science": {
+      "sunDeclination": "0.0°",
+      "dayLength": "12h00m",
+      "shadowLength": "5.40尺",
+      "directPoint": "北纬0.0°",
+      "description": "太阳黄经0°。太阳直射北纬0.0°，北半球中纬度地区昼长12h00m。以8尺圭表测影，正午影长5.40尺。"
+    },
+    "folk": {
+      "phenomena": "玄鸟至，雷乃发声，始电",
+      "agriculture": "小麦拔节，油菜开花",
+      "customs": "竖蛋、吃春菜、送春牛图",
+      "description": "春分日太阳直射赤道，全球昼夜等长。古时以立春至立夏为春，春分平分了春季。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 5,
+    "name": "清明",
+    "pinyin": "qingming",
+    "date": "4月4日-6日",
+    "solarLongitude": 15,
+    "science": {
+      "sunDeclination": "5.9°",
+      "dayLength": "12h32m",
+      "shadowLength": "4.27尺",
+      "directPoint": "北纬5.9°",
+      "description": "太阳黄经15°。太阳直射北纬5.9°，北半球中纬度地区昼长12h32m。以8尺圭表测影，正午影长4.27尺。"
+    },
+    "folk": {
+      "phenomena": "桐始华，田鼠化为鴽，虹始见",
+      "agriculture": "春播春种关键期，采茶",
+      "customs": "扫墓祭祖、踏青郊游、放风筝、插柳",
+      "description": "清明节源自上古春祭，既是自然节气也是传统节日。此时气清景明，万物生长。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 6,
+    "name": "谷雨",
+    "pinyin": "guyu",
+    "date": "4月19日-21日",
+    "solarLongitude": 30,
+    "science": {
+      "sunDeclination": "11.5°",
+      "dayLength": "13h03m",
+      "shadowLength": "3.32尺",
+      "directPoint": "北纬11.5°",
+      "description": "太阳黄经30°。太阳直射北纬11.5°，北半球中纬度地区昼长13h03m。以8尺圭表测影，正午影长3.32尺。"
+    },
+    "folk": {
+      "phenomena": "萍始生，鸣鸠拂其羽，戴胜降于桑",
+      "agriculture": "插秧、种棉、采谷雨茶",
+      "customs": "赏牡丹、禁蝎（贴谷雨贴）",
+      "description": "谷雨是春季最后一个节气，'雨生百谷'，降水增多利于谷物生长。此后气温上升加快。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 7,
+    "name": "立夏",
+    "pinyin": "lixia",
+    "date": "5月5日-7日",
+    "solarLongitude": 45,
+    "science": {
+      "sunDeclination": "16.3°",
+      "dayLength": "13h31m",
+      "shadowLength": "2.55尺",
+      "directPoint": "北纬16.3°",
+      "description": "太阳黄经45°。太阳直射北纬16.3°，北半球中纬度地区昼长13h31m。以8尺圭表测影，正午影长2.55尺。"
+    },
+    "folk": {
+      "phenomena": "蝼蝈鸣，蚯蚓出，王瓜生",
+      "agriculture": "早稻插秧，夏收作物管理",
+      "customs": "秤人、斗蛋、尝三新",
+      "description": "立夏标志着夏季开始，'立'即开始之意。气温显著升高，雷雨增多，万物繁茂。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 8,
+    "name": "小满",
+    "pinyin": "xiaoman",
+    "date": "5月20日-22日",
+    "solarLongitude": 60,
+    "science": {
+      "sunDeclination": "20.2°",
+      "dayLength": "13h55m",
+      "shadowLength": "1.97尺",
+      "directPoint": "北纬20.2°",
+      "description": "太阳黄经60°。太阳直射北纬20.2°，北半球中纬度地区昼长13h55m。以8尺圭表测影，正午影长1.97尺。"
+    },
+    "folk": {
+      "phenomena": "苦菜秀，靡草死，麦秋至",
+      "agriculture": "小麦灌浆，水稻追肥",
+      "customs": "祭车神、祈蚕节、吃苦菜",
+      "description": "小满指麦类等夏熟作物籽粒开始饱满但尚未成熟。'满而不溢'，蕴含中国传统哲学智慧。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 9,
+    "name": "芒种",
+    "pinyin": "mangzhong",
+    "date": "6月5日-7日",
+    "solarLongitude": 75,
+    "science": {
+      "sunDeclination": "22.6°",
+      "dayLength": "14h10m",
+      "shadowLength": "1.61尺",
+      "directPoint": "北纬22.6°",
+      "description": "太阳黄经75°。太阳直射北纬22.6°，北半球中纬度地区昼长14h10m。以8尺圭表测影，正午影长1.61尺。"
+    },
+    "folk": {
+      "phenomena": "螳螂生，鵙始鸣，反舌无声",
+      "agriculture": "有芒麦类收割，水稻插秧",
+      "customs": "安苗、打泥巴仗、煮梅",
+      "description": "芒种又称'忙种'，是农事最繁忙的时节。'芒'指有芒作物成熟，'种'指播种。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 10,
+    "name": "夏至",
+    "pinyin": "xiazhi",
+    "date": "6月21日-22日",
+    "solarLongitude": 90,
+    "science": {
+      "sunDeclination": "23.4°",
+      "dayLength": "14h16m",
+      "shadowLength": "1.49尺",
+      "directPoint": "北纬23.4°",
+      "description": "太阳黄经90°。太阳直射北纬23.4°，北半球中纬度地区昼长14h16m。以8尺圭表测影，正午影长1.49尺。"
+    },
+    "folk": {
+      "phenomena": "鹿角解，蝉始鸣，半夏生",
+      "agriculture": "夏收扫尾，秋作物播种",
+      "customs": "祭地、吃面（冬至饺子夏至面）",
+      "description": "夏至日太阳直射北回归线，北半球白昼最长。'至'即极至，阳气最盛。"
+    },
+    "animation": {
+      "gestureType": "palm",
+      "particleColor": "#FF6B35",
+      "soundEffect": "cicada",
+      "scene": "sunburst"
+    }
+  },
+  {
+    "id": 11,
+    "name": "小暑",
+    "pinyin": "xiaoshu",
+    "date": "7月6日-8日",
+    "solarLongitude": 105,
+    "science": {
+      "sunDeclination": "22.6°",
+      "dayLength": "14h10m",
+      "shadowLength": "1.61尺",
+      "directPoint": "北纬22.6°",
+      "description": "太阳黄经105°。太阳直射北纬22.6°，北半球中纬度地区昼长14h10m。以8尺圭表测影，正午影长1.61尺。"
+    },
+    "folk": {
+      "phenomena": "温风至，蟋蟀居宇，鹰始鸷",
+      "agriculture": "早稻收割，晚稻插秧",
+      "customs": "吃藕、晒书画、牧牛",
+      "description": "小暑意为'小热'，天气开始炎热但尚未到最热。此时江淮流域梅雨即将结束。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 12,
+    "name": "大暑",
+    "pinyin": "dashu",
+    "date": "7月22日-24日",
+    "solarLongitude": 120,
+    "science": {
+      "sunDeclination": "20.2°",
+      "dayLength": "13h55m",
+      "shadowLength": "1.97尺",
+      "directPoint": "北纬20.2°",
+      "description": "太阳黄经120°。太阳直射北纬20.2°，北半球中纬度地区昼长13h55m。以8尺圭表测影，正午影长1.97尺。"
+    },
+    "folk": {
+      "phenomena": "腐草为萤，土润溽暑，大雨时行",
+      "agriculture": "水稻田间管理，抗旱防涝",
+      "customs": "喝伏茶、晒伏姜、烧伏香",
+      "description": "大暑是一年中最热的时期，'暑'即炎热。高温高湿，利于农作物快速生长。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 13,
+    "name": "立秋",
+    "pinyin": "liqiu",
+    "date": "8月7日-9日",
+    "solarLongitude": 135,
+    "science": {
+      "sunDeclination": "16.3°",
+      "dayLength": "13h31m",
+      "shadowLength": "2.55尺",
+      "directPoint": "北纬16.3°",
+      "description": "太阳黄经135°。太阳直射北纬16.3°，北半球中纬度地区昼长13h31m。以8尺圭表测影，正午影长2.55尺。"
+    },
+    "folk": {
+      "phenomena": "凉风至，白露降，寒蝉鸣",
+      "agriculture": "中稻追肥，秋菜播种",
+      "customs": "贴秋膘、啃秋（吃西瓜）、晒秋",
+      "description": "立秋标志着秋季开始。虽然暑气未消，但阳气渐收，阴气渐长，万物开始从繁茂走向成熟。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 14,
+    "name": "处暑",
+    "pinyin": "chushu",
+    "date": "8月22日-24日",
+    "solarLongitude": 150,
+    "science": {
+      "sunDeclination": "11.5°",
+      "dayLength": "13h03m",
+      "shadowLength": "3.32尺",
+      "directPoint": "北纬11.5°",
+      "description": "太阳黄经150°。太阳直射北纬11.5°，北半球中纬度地区昼长13h03m。以8尺圭表测影，正午影长3.32尺。"
+    },
+    "folk": {
+      "phenomena": "鹰乃祭鸟，天地始肃，禾乃登",
+      "agriculture": "晚稻管理，棉花采收",
+      "customs": "开渔节、出游迎秋、放河灯",
+      "description": "处暑即'出暑'，暑气逐渐消退。此时秋高气爽，是农作物成熟收获的季节。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 15,
+    "name": "白露",
+    "pinyin": "bailu",
+    "date": "9月7日-9日",
+    "solarLongitude": 165,
+    "science": {
+      "sunDeclination": "5.9°",
+      "dayLength": "12h32m",
+      "shadowLength": "4.27尺",
+      "directPoint": "北纬5.9°",
+      "description": "太阳黄经165°。太阳直射北纬5.9°，北半球中纬度地区昼长12h32m。以8尺圭表测影，正午影长4.27尺。"
+    },
+    "folk": {
+      "phenomena": "鸿雁来，玄鸟归，群鸟养羞",
+      "agriculture": "秋收准备，果树采摘",
+      "customs": "收清露、饮白露茶、祭祀禹王",
+      "description": "白露时节天气转凉，昼夜温差加大，水汽凝结成露水。'露凝而白'，秋意渐浓。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 16,
+    "name": "秋分",
+    "pinyin": "qiufen",
+    "date": "9月22日-24日",
+    "solarLongitude": 180,
+    "science": {
+      "sunDeclination": "0.0°",
+      "dayLength": "12h00m",
+      "shadowLength": "5.40尺",
+      "directPoint": "北纬0.0°",
+      "description": "太阳黄经180°。太阳直射北纬0.0°，北半球中纬度地区昼长12h00m。以8尺圭表测影，正午影长5.40尺。"
+    },
+    "folk": {
+      "phenomena": "雷始收声，蛰虫坯户，水始涸",
+      "agriculture": "秋收大忙（玉米、水稻）",
+      "customs": "祭月、吃秋菜、送秋牛图",
+      "description": "秋分日太阳再次直射赤道，全球昼夜等长。此后北半球白昼渐短，黑夜渐长。"
+    },
+    "animation": {
+      "gestureType": "scissors",
+      "particleColor": "#FFD700",
+      "soundEffect": "autumn_wind",
+      "scene": "balance"
+    }
+  },
+  {
+    "id": 17,
+    "name": "寒露",
+    "pinyin": "hanlu",
+    "date": "10月7日-9日",
+    "solarLongitude": 195,
+    "science": {
+      "sunDeclination": "-5.9°",
+      "dayLength": "11h28m",
+      "shadowLength": "6.69尺",
+      "directPoint": "南纬5.9°",
+      "description": "太阳黄经195°。太阳直射南纬5.9°，北半球中纬度地区昼长11h28m。以8尺圭表测影，正午影长6.69尺。"
+    },
+    "folk": {
+      "phenomena": "鸿雁来宾，雀入大水为蛤，菊有黄华",
+      "agriculture": "秋收扫尾，冬小麦播种",
+      "customs": "登高望远、赏菊、吃重阳糕",
+      "description": "寒露时露水更冷，接近凝结成霜。气温比白露更低，北方已呈深秋景象。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 18,
+    "name": "霜降",
+    "pinyin": "shuangjiang",
+    "date": "10月23日-24日",
+    "solarLongitude": 210,
+    "science": {
+      "sunDeclination": "-11.5°",
+      "dayLength": "10h57m",
+      "shadowLength": "8.13尺",
+      "directPoint": "南纬11.5°",
+      "description": "太阳黄经210°。太阳直射南纬11.5°，北半球中纬度地区昼长10h57m。以8尺圭表测影，正午影长8.13尺。"
+    },
+    "folk": {
+      "phenomena": "豺乃祭兽，草木黄落，蛰虫咸俯",
+      "agriculture": "红薯/萝卜收获，越冬准备",
+      "customs": "赏红叶、吃柿子、登高",
+      "description": "霜降是秋季最后一个节气，'气肃而凝，露结为霜'。天气渐寒，露水凝结成霜。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 19,
+    "name": "立冬",
+    "pinyin": "lidong",
+    "date": "11月7日-8日",
+    "solarLongitude": 225,
+    "science": {
+      "sunDeclination": "-16.3°",
+      "dayLength": "10h29m",
+      "shadowLength": "9.65尺",
+      "directPoint": "南纬16.3°",
+      "description": "太阳黄经225°。太阳直射南纬16.3°，北半球中纬度地区昼长10h29m。以8尺圭表测影，正午影长9.65尺。"
+    },
+    "folk": {
+      "phenomena": "水始冰，地始冻，雉入大水为蜃",
+      "agriculture": "冬小麦出苗，农田水利建设",
+      "customs": "吃饺子、酿黄酒、补冬",
+      "description": "立冬标志着冬季开始。'立'即开始，万物进入休养收藏状态。北方河水开始结冰。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 20,
+    "name": "小雪",
+    "pinyin": "xiaoxue",
+    "date": "11月22日-23日",
+    "solarLongitude": 240,
+    "science": {
+      "sunDeclination": "-20.2°",
+      "dayLength": "10h05m",
+      "shadowLength": "11.07尺",
+      "directPoint": "南纬20.2°",
+      "description": "太阳黄经240°。太阳直射南纬20.2°，北半球中纬度地区昼长10h05m。以8尺圭表测影，正午影长11.07尺。"
+    },
+    "folk": {
+      "phenomena": "虹藏不见，天气上升，地气下降，闭塞而成冬",
+      "agriculture": "果树修剪，牲畜防寒",
+      "customs": "腌咸菜、吃糍粑、晒鱼干",
+      "description": "小雪时气温下降，开始降雪但雪量不大。农谚'小雪雪满天，来年必丰年'。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 21,
+    "name": "大雪",
+    "pinyin": "daxue",
+    "date": "12月6日-8日",
+    "solarLongitude": 255,
+    "science": {
+      "sunDeclination": "-22.6°",
+      "dayLength": "9h50m",
+      "shadowLength": "12.13尺",
+      "directPoint": "南纬22.6°",
+      "description": "太阳黄经255°。太阳直射南纬22.6°，北半球中纬度地区昼长9h50m。以8尺圭表测影，正午影长12.13尺。"
+    },
+    "folk": {
+      "phenomena": "鶡鴠不鸣，虎始交，荔挺出",
+      "agriculture": "积肥防冻，大棚蔬菜管理",
+      "customs": "腌肉、进补、观赏封河",
+      "description": "大雪节气降雪量增大，地面可能有积雪。'瑞雪兆丰年'，积雪可保土壤墒情。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 22,
+    "name": "冬至",
+    "pinyin": "dongzhi",
+    "date": "12月21日-23日",
+    "solarLongitude": 270,
+    "science": {
+      "sunDeclination": "-23.4°",
+      "dayLength": "9h44m",
+      "shadowLength": "12.53尺",
+      "directPoint": "南纬23.4°",
+      "description": "太阳黄经270°。太阳直射南纬23.4°，北半球中纬度地区昼长9h44m。以8尺圭表测影，正午影长12.53尺。"
+    },
+    "folk": {
+      "phenomena": "蚯蚓结，麋角解，水泉动",
+      "agriculture": "农田冻害防护，冬灌",
+      "customs": "吃饺子（北方）、吃汤圆（南方）、祭祖",
+      "description": "冬至日太阳直射南回归线，北半球白昼最短、黑夜最长。'至'为极至，阴极阳生。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 23,
+    "name": "小寒",
+    "pinyin": "xiaohan",
+    "date": "1月5日-7日",
+    "solarLongitude": 285,
+    "science": {
+      "sunDeclination": "-22.6°",
+      "dayLength": "9h50m",
+      "shadowLength": "12.13尺",
+      "directPoint": "南纬22.6°",
+      "description": "太阳黄经285°。太阳直射南纬22.6°，北半球中纬度地区昼长9h50m。以8尺圭表测影，正午影长12.13尺。"
+    },
+    "folk": {
+      "phenomena": "雁北乡，鹊始巢，雉始雊",
+      "agriculture": "越冬作物防寒，积肥造肥",
+      "customs": "吃腊八粥、探梅、冰戏",
+      "description": "小寒是一年中最冷时段之一。'小寒胜大寒'，北方气温降至全年最低。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  },
+  {
+    "id": 24,
+    "name": "大寒",
+    "pinyin": "dahan",
+    "date": "1月20日-21日",
+    "solarLongitude": 300,
+    "science": {
+      "sunDeclination": "-20.2°",
+      "dayLength": "10h05m",
+      "shadowLength": "11.07尺",
+      "directPoint": "南纬20.2°",
+      "description": "太阳黄经300°。太阳直射南纬20.2°，北半球中纬度地区昼长10h05m。以8尺圭表测影，正午影长11.07尺。"
+    },
+    "folk": {
+      "phenomena": "鸡乳，征鸟厉疾，水泽腹坚",
+      "agriculture": "积肥堆肥，农机检修",
+      "customs": "除旧布新、腌制年肴、准备年货",
+      "description": "大寒是二十四节气之终，寒冷至极但阳气已开始萌动。'大寒到顶点，日后天渐暖'。"
+    },
+    "animation": {
+      "gestureType": "none",
+      "particleColor": "#d4a574",
+      "soundEffect": "",
+      "scene": "default"
+    }
+  }
+]

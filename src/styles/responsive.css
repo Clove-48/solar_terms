@@ -1,0 +1,176 @@
+/* ==========================================
+   responsive.css — 响应式断点系统
+   Mobile-First，仅对移动端/平板应用适配样式
+   桌面端（> 768px）保持原始全屏布局不变
+   ========================================== */
+
+/* ==========================================
+   v1. 手机端 (≤ 480px) — 紧凑布局
+   桌面端的page-fullscreen(inset:0)继续保持全屏
+   ========================================== */
+@media (max-width: 480px) {
+  :root {
+    --spacing-md: 12px;
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+    --spacing-2xl: 32px;
+    --fs-body: 15px;
+    --fs-label: 12px;
+  }
+
+  /* header / footer 缩小 */
+  .header-fixed,
+  .guo-detail-header {
+    padding: 8px 12px 4px;
+  }
+  .footer-fixed,
+  .guo-detail-footer {
+    padding: 6px 12px;
+  }
+
+  /* 卡片 */
+  .card {
+    padding: var(--spacing-sm);
+  }
+
+  /* 详情页 */
+  .guo-detail-title { font-size: 22px; }
+  .guo-detail-lon { font-size: 11px; }
+  .guo-detail-body { padding-top: 60px; }
+  .guo-detail-intro { font-size: 13px; padding: 0 12px; }
+  .guo-detail-content { padding: var(--spacing-sm); }
+  .guo-detail-visual { min-height: 180px; height: auto; }
+
+  /* Tab栏 */
+  .tab-bar { gap: var(--spacing-md); }
+  .tab-item { font-size: 14px; }
+  .guo-tab-bar { gap: var(--spacing-md); padding: 0 12px; }
+  .guo-tab-item { font-size: 13px; }
+
+  /* 浮动信息栏 */
+  .float-info-bar {
+    font-size: 13px;
+    padding: 4px 12px;
+  }
+
+  /* 按钮 */
+  .btn { padding: 6px 14px; font-size: 13px; }
+  .touch-target { min-width: 44px; min-height: 44px; }
+
+  /* 导航按钮 */
+  .fallback-nav-btn { padding: 4px 10px; font-size: 11px; }
+
+  /* ─ 诗词容器移动端 ─── */
+  /*
+    移动端屏幕小，竖排诗词会遮挡黄道带，隐藏竖排诗词。
+    但科普解释面板（poem-explanation）保留并移至底部显示。
+  */
+  .poem-container,
+  .poem-row {
+    display: none !important;
+  }
+
+  /* 科普解释面板：移动端改为底部居中显示，不遮挡黄道带 */
+  .poem-explanation {
+    display: block !important;
+    position: fixed !important;
+    left: 8px !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: 60px !important;
+    max-width: none !important;
+    max-height: 140px !important;
+    transform: none !important;
+    font-size: 11px !important;
+    padding: 8px 12px !important;
+    z-index: 55 !important;
+  }
+
+  .poem-explanation.expl-left,
+  .poem-explanation.expl-right {
+    left: 8px !important;
+    right: 8px !important;
+    transform: none !important;
+  }
+
+  .poem-explanation.expl-visible {
+    transform: none !important;
+  }
+
+  /* 3D 透视减弱（性能） */
+  #zodiac-page { perspective: 800px; }
+
+  /* ─── 民俗卡片网格 ─── */
+  .guo-folk-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; padding: var(--spacing-xs); }
+  .guo-folk-card { padding: 6px 8px; }
+  .guo-folk-card .guo-folk-name { font-size: 12px; }
+  .guo-folk-card .guo-folk-desc { font-size: 10px; }
+
+  /* ── 卷轴视频 ─── */
+  .guo-video-embed { max-width: 100%; }
+  .guo-video-scroll { width: 16px; }
+  .scroll-rod { width: 10px; border-radius: 5px; }
+  .scroll-rod::before,
+  .scroll-rod::after { width: 16px; height: 7px; }
+
+  /* 视频区域：移动端不拦截触摸 */
+  .guo-detail-body {
+    touch-action: pan-y;       /* 仅允许垂直滚动，水平触摸留给ifarme */
+  }
+
+  /* ─── 实验室 ─── */
+  .lab-data-card { padding: 8px 10px; }
+  .lab-data-value { font-size: 18px; }
+  .lab-data-label { font-size: 10px; }
+  #lab-page canvas { height: 150px; }
+  #lab-page .guo-detail-body { padding: 8px 10px; }
+}
+
+/* ==========================================
+   v2. 平板端 (481-768px) — 适中布局
+   ========================================== */
+@media (min-width: 481px) and (max-width: 768px) {
+  :root {
+    --spacing-md: 16px;
+    --spacing-lg: 20px;
+    --spacing-xl: 28px;
+    --fs-body: 16px;
+  }
+}
+
+/* ==========================================
+   v3. 桌面端 (≥ 769px)
+   保持原始布局不变 — 无任何覆写
+   ========================================== */
+
+/* ==========================================
+   横屏模式适配
+   ========================================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .header-fixed { padding: 4px 12px; }
+  .footer-fixed { padding: 4px 12px; }
+  .float-info-bar { top: 4px; bottom: auto; }
+}
+
+/* ==========================================
+   安全区适配（刘海屏）
+   ========================================== */
+@supports (padding: env(safe-area-inset-top)) {
+  .header-fixed {
+    padding-top: calc(var(--spacing-md) + env(safe-area-inset-top));
+  }
+  .footer-fixed {
+    padding-bottom: calc(var(--spacing-md) + env(safe-area-inset-bottom));
+  }
+}
+
+/* ==========================================
+   减少动画偏好
+   ========================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

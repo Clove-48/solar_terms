@@ -1,0 +1,164 @@
+/* ==========================================
+   layout.css — 布局系统
+   ========================================== */
+
+/* 全屏页面容器 */
+.page-fullscreen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg-deep);
+  color: var(--foreground-primary);
+  transition: background var(--duration-normal) var(--ease-out);
+}
+
+/* 黄道带 3D 立体视效 */
+#zodiac-page {
+  perspective: 1200px;
+}
+
+#zodiac-page .page-fullscreen {
+  transform-style: preserve-3d;
+}
+
+#zodiac-page #zodiac-canvas {
+  transition: transform 0.15s var(--ease-out);
+  will-change: transform;
+  border-radius: 8px;
+  box-shadow:
+    0 0 40px rgba(212, 165, 116, 0.06),
+    0 0 80px rgba(212, 165, 116, 0.03);
+}
+
+/* 科学实验室 3D 立体视效 */
+#lab-page {
+  perspective: 1000px;
+}
+
+#lab-page .card {
+  transform-style: preserve-3d;
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+#lab-page .card:hover {
+  transform: translateZ(6px) rotateX(1deg);
+  box-shadow: 0 8px 32px rgba(212, 165, 116, 0.12);
+}
+
+#lab-page canvas {
+  transform-style: preserve-3d;
+  transition: transform 0.4s var(--ease-out);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+#lab-page canvas:hover {
+  transform: translateZ(10px);
+  box-shadow: 0 8px 40px rgba(212, 165, 116, 0.15);
+}
+
+#lab-page .lab-data-card {
+  transition: transform 0.3s var(--ease-out), box-shadow 0.3s var(--ease-out);
+}
+
+#lab-page .lab-data-card:hover {
+  transform: translateZ(8px) scale(1.02);
+  box-shadow: 0 6px 24px rgba(212, 165, 116, 0.1);
+}
+
+/* 居中 Flex */
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 列布局 */
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 固定顶部 */
+.header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: var(--spacing-md);
+}
+
+/* 固定底部 */
+.footer-fixed {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  padding: var(--spacing-md);
+}
+
+/* 卡片 */
+.card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  transition: transform var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.card:active {
+  transform: scale(0.97);
+}
+
+/* 网格布局 */
+.grid-4x6 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+}
+
+/* Tab 栏 */
+.tab-bar {
+  display: flex;
+  gap: var(--spacing-lg);
+  border-bottom: 1px solid var(--border-default);
+  padding-bottom: var(--spacing-sm);
+}
+
+.tab-item {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: var(--fs-body);
+  color: var(--muted-ink);
+  padding: var(--spacing-xs) 0;
+  cursor: pointer;
+  position: relative;
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.tab-item.active {
+  color: var(--accent-cyan);
+}
+
+.tab-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--accent-cyan);
+  border-radius: 1px;
+}
+
+/* 触摸目标尺寸保证 */
+.touch-target {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
