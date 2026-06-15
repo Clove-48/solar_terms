@@ -149,19 +149,12 @@ function updatePoetryDisplay(store, term) {
   }
 }
 
-/** 是否在移动端（≤768px），移动端不做流式打字，直接一次性展示 */
+/** 是否在移动端（≤768px），仅用于布局调整；科普内容始终保持流式打字 */
 function isMobileView() {
   return typeof window !== 'undefined' && window.innerWidth <= 768;
 }
 
 function streamExplanation(el, explanation, kepu) {
-  // 移动端：一次性输出完整内容，避免用户以为"没显示全"
-  if (isMobileView()) {
-    el.textContent = explanation + (kepu ? '\n\n━━━ 天文小知识 ━━━\n' + kepu : '');
-    el.style.opacity = '1';
-    el.classList.add('expl-visible');
-    return;
-  }
   el.textContent = '';
   el.style.opacity = '1';
   let fullContent = explanation;
@@ -177,17 +170,10 @@ function streamExplanation(el, explanation, kepu) {
       _poemTimer = null;
       setTimeout(() => el.classList.add('expl-visible'), 200);
     }
-  }, 35);
+  }, isMobileView() ? 18 : 35);
 }
 
 function typewriterEffect(el, text, onComplete) {
-  // 移动端：直接显示完整文字
-  if (isMobileView()) {
-    el.textContent = text;
-    el.style.opacity = '1';
-    if (onComplete) setTimeout(onComplete, 100);
-    return;
-  }
   el.textContent = '';
   el.style.opacity = '1';
   let i = 0;
@@ -201,7 +187,7 @@ function typewriterEffect(el, text, onComplete) {
       _poemTimer = null;
       if (onComplete) setTimeout(onComplete, 300);
     }
-  }, 60);
+  }, isMobileView() ? 28 : 60);
 }
 
 function getSeasonKey(termId) {

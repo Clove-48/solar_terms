@@ -123,8 +123,8 @@
     top: 84px !important;
     bottom: auto !important;
     max-width: none !important;
-    /* 移动端一次性显示完整内容：高度由内容撑开，最大不超过 30vh */
-    max-height: 30vh !important;
+    /* 移动端：保持流式打字，超出可滚动查看 */
+    max-height: 32vh !important;
     transform: none !important;
     font-size: 12.5px !important;
     line-height: 1.55 !important;
@@ -315,6 +315,17 @@
    v3. 桌面端 (≥ 769px)
    保持原始布局不变
    ========================================== */
+
+/* 桌面端：浮动信息条 — 显式居中 + 调整到状态栏下方 */
+@media (min-width: 769px) {
+  .float-info-bar {
+    top: 50px;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    max-width: 720px;
+  }
+}
 
 /* ==========================================
    横屏模式适配

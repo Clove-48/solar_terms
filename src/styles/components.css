@@ -271,7 +271,7 @@
 
 .float-info-bar {
   position: fixed;
-  top: 36px;
+  top: 48px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 55;
@@ -279,6 +279,7 @@
   align-items: center;
   gap: 6px;
   padding: 4px 16px;
+  max-width: calc(100% - 32px);
   background: rgba(245, 240, 232, 0.8);
   border: 1px solid rgba(139, 90, 43, 0.12);
   border-radius: var(--radius-full);
@@ -289,6 +290,7 @@
   color: #4a3f35;
   letter-spacing: 0.05em;
   pointer-events: none;
+  white-space: nowrap;
   transition: opacity 0.4s var(--ease-out), transform 0.4s var(--ease-out);
 }
 
@@ -322,11 +324,12 @@
 @keyframes floatInfoIn {
   0% {
     opacity: 0;
-    transform: translateY(-6px);
+    /* 关键：动画中必须保留 translateX(-50%)，否则浮条会被推出视口右侧 */
+    transform: translateX(-50%) translateY(-6px);
   }
   100% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
   }
 }
 

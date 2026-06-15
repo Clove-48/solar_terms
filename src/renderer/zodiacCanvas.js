@@ -65,7 +65,9 @@ export class ZodiacCanvas {
 
   init() {
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    // 保存回调引用，destroy() 才能正确移除
+    this._onResize = () => this._resize();
+    window.addEventListener('resize', this._onResize);
 
     this.canvas.addEventListener('pointerdown', this._onPointerDown);
     window.addEventListener('pointermove', this._onPointerMove);
@@ -333,12 +335,15 @@ export class ZodiacCanvas {
     // 四象 + 英文（响应式字号）
     const s = this._scaleFactor || 1;
     const isMobileView = s < 0.8;
-    const fourFontSize = isMobileView ? Math.round(11 * s) : Math.round(14 * s);
+    const fourFontSize = isMobileView ? Math.round(13 * s) : Math.round(14 * s);
     const fourEnSize = Math.round(6 * s);
-    const termFontSize = Math.round(10 * s);
-    const curFontSize1 = Math.round(14 * s);
+    // 节气名：移动端用最小保底 12px，避免看不清
+    const termFontSize = isMobileView
+      ? Math.max(12, Math.round(11 * s))
+      : Math.round(11 * s);
+    const curFontSize1 = isMobileView ? Math.max(15, Math.round(14 * s)) : Math.round(14 * s);
     const curFontSize2 = Math.round(8 * s);
-    const lonTextSize = Math.round(8 * s);
+    const lonTextSize = isMobileView ? Math.max(9, Math.round(8 * s)) : Math.round(8 * s);
     const markRadius = isMobileView ? 4 * s : 5 * s;
 
     fourSymbols.forEach(({ lon, label, en }) => {
@@ -601,7 +606,11 @@ export class ZodiacCanvas {
   destroy() {
     if (this._animId) cancelAnimationFrame(this._animId);
     if (this._inertiaId) cancelAnimationFrame(this._inertiaId);
-    window.removeEventListener('resize', () => this._resize());
+    // 必须使用保存的引用才能正确移除监听器
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      this._onResize = null;
+    }
     this.canvas.removeEventListener('pointerdown', this._onPointerDown);
     window.removeEventListener('pointermove', this._onPointerMove);
     window.removeEventListener('pointerup', this._onPointerUp);

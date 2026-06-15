@@ -85,7 +85,8 @@ export async function mount(store) {
       if (!term) return;
       if (labelEl) labelEl.textContent = `${term.name} · 黄经 ${term.solarLongitude}°`;
       setActiveChip(id);
-      renderSundial(term);
+      // 使用 requestAnimationFrame 让数据卡片先更新，再异步重绘 canvas，避免同步渲染卡顿
+      requestAnimationFrame(() => renderSundial(term));
     };
     applyTerm(currentId);
 
@@ -99,24 +100,35 @@ export async function mount(store) {
       panel.hidden = false;
       toggleBtn.setAttribute('aria-expanded', 'true');
       toggleBtn.classList.add('open');
-      // 滚动到当前选中项
+      // 滚动到当前选中项（使用 block:'nearest' 避免强制滚动导致点击被吞）
       const active = panel.querySelector('.term-picker-chip.active');
       if (active && typeof active.scrollIntoView === 'function') {
-        active.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        try {
+          active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+        } catch (_) { /* ignore */ }
       }
     };
     const onToggleClick = (e) => {
+      e.preventDefault();
       e.stopPropagation();
       if (panel.hidden) openPanel(); else closePanel();
     };
+    // 同时绑定 touchend 事件，确保移动端点击不会被吞
+    const onToggleTouch = (e) => {
+      // 让 click 事件处理即可，避免重复触发
+    };
     toggleBtn.addEventListener('click', onToggleClick);
+    toggleBtn.addEventListener('touchend', onToggleTouch, { passive: true });
     _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
+    _cleanupFns.push(() => toggleBtn.removeEventListener('touchend', onToggleTouch));
 
     const onDocClick = (e) => {
-      if (!panel.hidden && !document.getElementById('sundial-term-picker').contains(e.target)) {
+      const picker = document.getElementById('sundial-term-picker');
+      if (!panel.hidden && picker && !picker.contains(e.target)) {
         closePanel();
       }
     };
+    // 使用 capture 阶段 + once 不行（需要多次触发）；改为常规冒泡
     document.addEventListener('click', onDocClick);
     _cleanupFns.push(() => document.removeEventListener('click', onDocClick));
 
@@ -125,7 +137,8 @@ export async function mount(store) {
       if (!chip) return;
       const id = Number(chip.dataset.termId);
       applyTerm(id);
-      closePanel();
+      // 延迟关闭面板，确保 click 事件完全处理完成
+      setTimeout(closePanel, 50);
     };
     panel.addEventListener('click', onPanelClick);
     _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));

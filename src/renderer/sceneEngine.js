@@ -26,14 +26,18 @@ export class SceneEngine {
     this._termName = termName || '';
     this._particles = [];
     this._lastTime = performance.now();
+    // 移动端粒子减半（避免视觉过载），桌面端保持原汁原味
+    const isMobile = window.innerWidth <= 480;
+    const k = isMobile ? 0.55 : 1.0;
     switch (seasonKey) {
-      case 'spring': this._spawn(60, () => this._petal()); break;
-      case 'summer': this._spawn(30, () => this._heat()); break;
-      case 'autumn': this._spawn(50, () => this._leaf()); break;
-      case 'winter':
-        const count = termName === '大雪' ? 120 : termName === '小雪' ? 60 : 100;
-        this._spawn(count, () => this._snow());
+      case 'spring': this._spawn(Math.round(60 * k), () => this._petal()); break;
+      case 'summer': this._spawn(Math.round(30 * k), () => this._heat()); break;
+      case 'autumn': this._spawn(Math.round(50 * k), () => this._leaf()); break;
+      case 'winter': {
+        const base = termName === '大雪' ? 120 : termName === '小雪' ? 60 : 100;
+        this._spawn(Math.round(base * k), () => this._snow());
         break;
+      }
     }
   }
 
@@ -151,7 +155,14 @@ export class SceneEngine {
 
   /** 持续补充粒子，保持密度 */
   _refillParticles(w, h) {
-    const maxCounts = { petal: 80, leaf: 70, snow: 150, heat: 30 };
+    const isMobile = window.innerWidth <= 480;
+    const k = isMobile ? 0.6 : 1.0;
+    const maxCounts = {
+      petal: Math.round(80 * k),
+      leaf:  Math.round(70 * k),
+      snow:  Math.round(150 * k),
+      heat:  Math.round(30 * k),
+    };
     const maxCount = maxCounts[this._season === 'spring' ? 'petal' :
                                this._season === 'summer' ? 'heat' :
                                this._season === 'autumn' ? 'leaf' : 'snow'] || 30;
