@@ -90,17 +90,31 @@ export async function mount(store) {
     };
     applyTerm(currentId);
 
+    // 标记是否正在处理 chip 选择，避免 document click 在 chip click 之后立即关闭面板（移动端 300ms click 延迟下关键）
+    let isSelecting = false;
+    // 追踪待执行的 closePanel 计时器，openPanel/selectChip 时需清理，防止旧计时器在新一次操作后误关闭面板
+    let closeTimer = null;
+    const clearCloseTimer = () => {
+      if (closeTimer !== null) {
+        clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+    };
+
     // 打开/关闭面板
     const closePanel = () => {
+      clearCloseTimer();
       panel.hidden = true;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.classList.remove('open');
     };
     const openPanel = () => {
+      clearCloseTimer();
+      isSelecting = false;
       panel.hidden = false;
       toggleBtn.setAttribute('aria-expanded', 'true');
       toggleBtn.classList.add('open');
-      // 滚动到当前选中项（使用 block:'nearest' 避免强制滚动导致点击被吞）
+      // 滚动到当前选中项（仅在不可见时滚动，避免强制滚动吞掉移动端的点击）
       const active = panel.querySelector('.term-picker-chip.active');
       if (active && typeof active.scrollIntoView === 'function') {
         try {
@@ -113,16 +127,13 @@ export async function mount(store) {
       e.stopPropagation();
       if (panel.hidden) openPanel(); else closePanel();
     };
-    // 同时绑定 touchend 事件，确保移动端点击不会被吞
-    const onToggleTouch = (e) => {
-      // 让 click 事件处理即可，避免重复触发
-    };
+    // 不再绑定 touchend：移动端 click 事件由浏览器合成（fastclick 已默认启用），空函数 touchend 反而会干扰合成 click 在某些机型上的派发
     toggleBtn.addEventListener('click', onToggleClick);
-    toggleBtn.addEventListener('touchend', onToggleTouch, { passive: true });
     _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
-    _cleanupFns.push(() => toggleBtn.removeEventListener('touchend', onToggleTouch));
 
     const onDocClick = (e) => {
+      // 正在处理选择中（chip click 触发的 50ms 窗口内）→ 忽略 document click，避免吞掉选择
+      if (isSelecting) return;
       const picker = document.getElementById('sundial-term-picker');
       if (!panel.hidden && picker && !picker.contains(e.target)) {
         closePanel();
@@ -135,13 +146,24 @@ export async function mount(store) {
     const onPanelClick = (e) => {
       const chip = e.target.closest('.term-picker-chip');
       if (!chip) return;
+      // 阻止冒泡到 document：移动端 click 延迟 300ms 期间，document click 处理器可能在 chip click 之后看到旧事件并误关闭
+      e.stopPropagation();
       const id = Number(chip.dataset.termId);
+      isSelecting = true;
       applyTerm(id);
-      // 延迟关闭面板，确保 click 事件完全处理完成
-      setTimeout(closePanel, 50);
+      // 清理上一次未执行的 closePanel，再排队本次的，避免旧计时器在新一次操作后误关闭
+      clearCloseTimer();
+      closeTimer = setTimeout(() => {
+        closeTimer = null;
+        isSelecting = false;
+        closePanel();
+      }, 60);
     };
     panel.addEventListener('click', onPanelClick);
-    _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));
+    _cleanupFns.push(() => {
+      panel.removeEventListener('click', onPanelClick);
+      clearCloseTimer();
+    });
   }
 }
 
