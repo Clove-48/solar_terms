@@ -120,13 +120,14 @@
     position: fixed !important;
     left: 8px !important;
     right: 8px !important;
-    top: 92px !important;
+    top: 84px !important;
     bottom: auto !important;
     max-width: none !important;
-    max-height: 110px !important;
+    /* 移动端一次性显示完整内容：高度由内容撑开，最大不超过 30vh */
+    max-height: 30vh !important;
     transform: none !important;
     font-size: 12.5px !important;
-    line-height: 1.6 !important;
+    line-height: 1.55 !important;
     padding: 8px 12px !important;
     z-index: 50 !important;
     overflow-y: auto !important;
@@ -149,7 +150,7 @@
   .poem-explanation.expl-right {
     left: 8px !important;
     right: 8px !important;
-    top: 92px !important;
+    top: 84px !important;
     bottom: auto !important;
     transform: none !important;
   }
@@ -189,6 +190,8 @@
   .guo-detail-body {
     padding-left: var(--spacing-sm);
     padding-right: var(--spacing-sm);
+    /* 移动端：底部留出足够空间给固定底栏（仅含返回按钮），避免遮挡最后几个知识卡片 */
+    padding-bottom: 80px !important;
   }
 
   /* ── 科学数据卡片 ── */
@@ -230,6 +233,27 @@
   }
   .guo-term-nav-btn svg {
     flex-shrink: 0;
+  }
+
+  /* 移动端：详情页底栏简化为只显示返回按钮，日期选择器与前后翻页折叠收纳 */
+  .guo-detail-footer {
+    padding: 4px var(--spacing-sm) calc(4px + env(safe-area-inset-bottom, 0px)) !important;
+    min-height: 36px !important;
+  }
+  .guo-detail-footer .btn-ghost,
+  .guo-detail-footer .guo-btn-back {
+    min-height: 32px !important;
+    padding: 4px 10px !important;
+    font-size: 12px !important;
+  }
+  /* 移动端：把 fallback 前后翻页按钮和日期选择器在详情页里隐藏（避免与 .guo-term-nav 重复 + 占空间） */
+  #detail-footer-bar .fallback-nav-buttons,
+  #detail-footer-bar .fallback-date-picker {
+    display: none !important;
+  }
+  /* 移动端：隐藏详情页底部的返回按钮（顶部 header 中已有） */
+  #btn-back-bottom {
+    display: none !important;
   }
 
   /* ── 实验室 ── */

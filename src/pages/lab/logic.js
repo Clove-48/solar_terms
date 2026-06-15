@@ -10,14 +10,21 @@ import { getDataByDayOfYear } from '../../business/calendar.js';
 
 let gnomonCanvas = null;
 let sundialCanvas = null;
+// 收集所有事件监听器 + 计时器，unmount 时统一清理，避免内存泄漏/卡顿
+let _cleanupFns = [];
 
 export async function mount(store) {
   const terms = store.get('solarTerms') || window.__solarTerms || [];
+  // 每次 mount 重置清理列表，防止重复注册
+  _cleanupFns = [];
 
   // 返回按钮
-  document.getElementById('btn-lab-back')?.addEventListener('click', () => {
-    location.hash = '#zodiac';
-  });
+  const backBtn = document.getElementById('btn-lab-back');
+  if (backBtn) {
+    const onBack = () => { location.hash = '#zodiac'; };
+    backBtn.addEventListener('click', onBack);
+    _cleanupFns.push(() => backBtn.removeEventListener('click', onBack));
+  }
 
   // ── 圭表测影 ──
   const gnomonCvs = document.getElementById('gnomon-canvas');
@@ -28,10 +35,12 @@ export async function mount(store) {
 
   const slider = document.getElementById('date-slider');
   if (slider) {
-    slider.addEventListener('input', () => {
+    const onSliderInput = () => {
       const day = parseInt(slider.value);
       updateGnomon(day);
-    });
+    };
+    slider.addEventListener('input', onSliderInput);
+    _cleanupFns.push(() => slider.removeEventListener('input', onSliderInput));
     updateGnomon(80);
   }
 
@@ -96,22 +105,30 @@ export async function mount(store) {
         active.scrollIntoView({ block: 'center', behavior: 'smooth' });
       }
     };
-    toggleBtn.addEventListener('click', (e) => {
+    const onToggleClick = (e) => {
       e.stopPropagation();
       if (panel.hidden) openPanel(); else closePanel();
-    });
-    document.addEventListener('click', (e) => {
+    };
+    toggleBtn.addEventListener('click', onToggleClick);
+    _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
+
+    const onDocClick = (e) => {
       if (!panel.hidden && !document.getElementById('sundial-term-picker').contains(e.target)) {
         closePanel();
       }
-    });
-    panel.addEventListener('click', (e) => {
+    };
+    document.addEventListener('click', onDocClick);
+    _cleanupFns.push(() => document.removeEventListener('click', onDocClick));
+
+    const onPanelClick = (e) => {
       const chip = e.target.closest('.term-picker-chip');
       if (!chip) return;
       const id = Number(chip.dataset.termId);
       applyTerm(id);
       closePanel();
-    });
+    };
+    panel.addEventListener('click', onPanelClick);
+    _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));
   }
 }
 
@@ -179,4 +196,7 @@ function renderSundial(term) {
 export function unmount() {
   if (gnomonCanvas) { gnomonCanvas.destroy(); gnomonCanvas = null; }
   if (sundialCanvas) { sundialCanvas.destroy(); sundialCanvas = null; }
+  // 清理所有注册的事件监听器，避免多次进出页面后累积导致卡顿
+  _cleanupFns.forEach(fn => { try { fn(); } catch (_) {} });
+  _cleanupFns = [];
 }

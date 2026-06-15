@@ -15,7 +15,9 @@ export class GnomonCanvas {
 
   init() {
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    // 保存回调引用，确保 destroy() 能正确移除监听器
+    this._onResize = () => this._resize();
+    window.addEventListener('resize', this._onResize);
   }
 
   _resize() {
@@ -25,6 +27,8 @@ export class GnomonCanvas {
     this.canvas.height = 180 * dpr;
     this.canvas.style.width = (rect.width - 32) + 'px';
     this.canvas.style.height = '180px';
+    // 重置变换矩阵，避免重复缩放累积
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
     this._w = this.canvas.width / dpr;
     this._h = 180;
@@ -150,6 +154,10 @@ export class GnomonCanvas {
     if (this._animId) {
       cancelAnimationFrame(this._animId);
     }
-    window.removeEventListener('resize', () => this._resize());
+    // 必须使用保存的引用才能正确移除监听器
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      this._onResize = null;
+    }
   }
 }

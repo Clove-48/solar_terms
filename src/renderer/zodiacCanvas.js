@@ -85,23 +85,24 @@ export class ZodiacCanvas {
     this.canvas.height = rect.height * dpr;
     this.canvas.style.width = rect.width + 'px';
     this.canvas.style.height = rect.height + 'px';
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);  // 重置变换，避免重复缩放累积
     this.ctx.scale(dpr, dpr);
 
     const screenW = rect.width;
     const screenH = rect.height;
 
-    // 移动端适配：缩小圆环，避免遮挡底部诗词
+    // 完整圆周下，半径需要比半圆更小以避免被裁切
+    // 移动端顶部科普面板占用约 80~240px 区域，圆心相应下移
     if (screenW <= 480) {
-      this._baseRadius = Math.min(screenW, screenH) * 0.32;
-      this._scaleFactor = 0.62;
-      // 移动端：科普面板占用了顶部 92+110=202px 区域，圆心向下偏移
-      this._mobileTopOffset = 102;
+      this._baseRadius = Math.min(screenW * 0.4, (screenH - 280) * 0.35);
+      this._scaleFactor = 0.6;
+      this._mobileTopOffset = 120;
     } else if (screenW <= 768) {
-      this._baseRadius = Math.min(screenW, screenH) * 0.35;
-      this._scaleFactor = 0.82;
-      this._mobileTopOffset = 0;
+      this._baseRadius = Math.min(screenW * 0.38, (screenH - 100) * 0.38);
+      this._scaleFactor = 0.78;
+      this._mobileTopOffset = 30;
     } else {
-      this._baseRadius = Math.min(screenW, screenH) * 0.32;
+      this._baseRadius = Math.min(screenW, screenH) * 0.36;
       this._scaleFactor = 1.0;
       this._mobileTopOffset = 0;
     }
@@ -207,7 +208,8 @@ export class ZodiacCanvas {
   }
 
   _getCenterLon() {
-    const lon = 180 + this.rotation * (360 / (Math.PI * 0.8));
+    // 完整圆周 360°，rotation 一周对应 360°黄经
+    const lon = 180 + this.rotation * (180 / Math.PI);
     return ((lon % 360) + 360) % 360;
   }
 
@@ -229,11 +231,13 @@ export class ZodiacCanvas {
   }
 
   _getTermAngle(solarLongitude) {
+    // 完整圆周 0~2π：春分(0°) 在最上方 (π/2)
     const centerLon = this._getCenterLon();
     let offset = solarLongitude - centerLon;
     if (offset > 180) offset -= 360;
     if (offset < -180) offset += 360;
-    return Math.PI * 0.5 + (offset / 360) * Math.PI * 0.8;
+    // offset (°) -> 弧度，正上方为 Math.PI/2，顺时针展开
+    return Math.PI * 0.5 + (offset / 360) * Math.PI * 2;
   }
 
   /** 绘制国风科技黄道带 */
@@ -279,29 +283,28 @@ export class ZodiacCanvas {
     ctx.save();
     ctx.translate(this.centerX, this.centerY);
 
-    // ── ③ 黄道带轨道 — 双层辉光环 ──
+    // ── ③ 黄道带轨道 — 完整圆环 ──
     // 外圈发光
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius + 6, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.arc(0, 0, this.radius + 6, 0, Math.PI * 2);
     ctx.strokeStyle = 'rgba(139, 90, 43, 0.08)';
     ctx.lineWidth = 20;
     ctx.stroke();
 
-    // 主轨道（金色渐变，适应浅色背景）
+    // 主轨道（金色渐变，完整圆周）
     const arcGrad = ctx.createLinearGradient(0, -this.radius, 0, this.radius);
     arcGrad.addColorStop(0, 'rgba(139, 90, 43, 0.25)');
     arcGrad.addColorStop(0.5, 'rgba(139, 90, 43, 0.45)');
     arcGrad.addColorStop(1, 'rgba(139, 90, 43, 0.25)');
     ctx.beginPath();
-    ctx.arc(0, 0, this.radius, Math.PI * 0.1, Math.PI * 0.9);
+    ctx.arc(0, 0, this.radius, 0, Math.PI * 2);
     ctx.strokeStyle = arcGrad;
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // ── ④ 黄经刻度线（每 15°） ──
+    // ── ④ 黄经刻度线（每 15°） — 完整圆周 ──
     for (let deg = 0; deg < 360; deg += 15) {
       const angle = this._getTermAngle(deg);
-      if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) continue;
       const isMajor = deg % 90 === 0;
       const isMid = deg % 45 === 0;
       const innerR = isMajor ? this.radius - 14 : isMid ? this.radius - 10 : this.radius - 7;
@@ -340,7 +343,6 @@ export class ZodiacCanvas {
 
     fourSymbols.forEach(({ lon, label, en }) => {
       const a = this._getTermAngle(lon);
-      if (a < Math.PI * 0.1 || a > Math.PI * 0.9) return;
       // 移动端拉远四象与黄道带的距离，避免遮挡节点
       const ringOffset = isMobileView ? 26 * s : 36 * s;
       const x = Math.cos(a) * (this.radius + ringOffset);
@@ -362,11 +364,10 @@ export class ZodiacCanvas {
       }
     });
 
-    // ── ⑥ 28 星宿微点（作为背景装饰环绕黄道） ──
+    // ── ⑥ 28 星宿微点（作为背景装饰环绕黄道） — 完整圆周 ──
     for (let i = 0; i < 28; i++) {
       const degOffset = (i / 28) * 360;
       const angle = this._getTermAngle(degOffset);
-      if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) continue;
       const x = Math.cos(angle) * (this.radius + 12);
       const y = Math.sin(angle) * (this.radius + 12);
       ctx.beginPath();
@@ -375,7 +376,7 @@ export class ZodiacCanvas {
       ctx.fill();
     }
 
-    // ── ⑦ 节气标记 ──
+    // ── ⑦ 节气标记 — 完整圆周 ──
     const currentId = this.store.get('currentTermId');
 
     // 先绘制非当前节气
@@ -383,7 +384,6 @@ export class ZodiacCanvas {
       if (term.id === currentId) return;
 
       const angle = this._getTermAngle(term.solarLongitude);
-      if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) return;
       const x = Math.cos(angle) * this.radius;
       const y = Math.sin(angle) * this.radius;
 
@@ -553,18 +553,17 @@ export class ZodiacCanvas {
 
     // 移动端使用更严格的命中半径，避免误触相邻节点
     const isMobile = (this._scaleFactor || 1) < 0.8;
-    const hitRadius = isMobile ? 22 : 30;
+    const hitRadius = isMobile ? 24 : 32;
 
     // 计算点击点到圆心的角度
     const clickDist = Math.hypot(x, y);
     if (clickDist < 1) return null;
     const clickAngle = Math.atan2(y, x);
 
-    // 收集所有可见的 term
-    const visibleTerms = [];
+    // 收集所有 term
+    const candidates = [];
     for (const term of this.terms) {
       const angle = this._getTermAngle(term.solarLongitude);
-      if (angle < Math.PI * 0.1 || angle > Math.PI * 0.9) continue;
       const tx = Math.cos(angle) * this.radius;
       const ty = Math.sin(angle) * this.radius;
       const pixelDist = distance(x, y, tx, ty);
@@ -574,28 +573,29 @@ export class ZodiacCanvas {
       let angleDiff = Math.abs(clickAngle - termAngle);
       if (angleDiff > Math.PI) angleDiff = 2 * Math.PI - angleDiff;
 
-      visibleTerms.push({ term, pixelDist, angleDiff });
+      // 完整圆周：所有 term 都参与命中检测
+      candidates.push({ term, pixelDist, angleDiff });
     }
 
     // 先按像素距离筛选在 hitRadius 内的节点
-    let candidates = visibleTerms.filter(v => v.pixelDist < hitRadius);
+    let matches = candidates.filter(v => v.pixelDist < hitRadius);
 
     // 如果没有候选，尝试用角距离作为扩展匹配（用于点击黄道带附近但不在节点上的情况）
-    if (candidates.length === 0) {
+    if (matches.length === 0) {
       // 仅匹配角度足够接近（且点击距离圆环不太远）
       const ringTolerance = isMobile ? 18 : 22;
       const ringDist = Math.abs(clickDist - this.radius);
       if (ringDist > ringTolerance) return null;
-      candidates = visibleTerms
+      matches = candidates
         .map(v => ({ ...v, score: v.angleDiff }))
         .filter(v => v.score < (isMobile ? 0.10 : 0.12));
     }
 
-    if (candidates.length === 0) return null;
+    if (matches.length === 0) return null;
 
-    // 取像素距离最近的；如果有多个非常接近的，用角距离辅助选择
-    candidates.sort((a, b) => a.pixelDist - b.pixelDist);
-    return candidates[0].term;
+    // 取像素距离最近的
+    matches.sort((a, b) => a.pixelDist - b.pixelDist);
+    return matches[0].term;
   }
 
   destroy() {

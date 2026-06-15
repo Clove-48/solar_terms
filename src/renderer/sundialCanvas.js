@@ -14,7 +14,9 @@ export class SundialCanvas {
 
   init() {
     this._resize();
-    window.addEventListener('resize', () => this._resize());
+    // 必须保存回调引用，否则 destroy() 无法移除监听器，导致内存泄漏/卡顿
+    this._onResize = () => this._resize();
+    window.addEventListener('resize', this._onResize);
   }
 
   _resize() {
@@ -24,6 +26,8 @@ export class SundialCanvas {
     this.canvas.height = 200 * dpr;
     this.canvas.style.width = (rect.width - 32) + 'px';
     this.canvas.style.height = '200px';
+    // 重置变换矩阵，避免重复调用 scale 导致累积缩放
+    this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
     this._w = this.canvas.width / dpr;
     this._h = 200;
@@ -167,6 +171,10 @@ export class SundialCanvas {
   }
 
   destroy() {
-    window.removeEventListener('resize', () => this._resize());
+    // 必须使用 init() 中保存的同一个函数引用才能正确移除监听器
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      this._onResize = null;
+    }
   }
 }

@@ -38,12 +38,14 @@ export async function mount(store) {
   // 根据当前日期定位到正确的节气
   updateStatusBar(store);
 
-  // 初始旋转角度对准当前节气
+  // 初始旋转角度对准当前节气（完整圆周：rotation=0 → centerLon=180°）
+  // 想让 term 位于顶部，需要 centerLon == term.solarLongitude
+  // centerLon = 180 + rotation * 180/π → rotation = (targetLon - 180) * π/180
   const currentId = store.get('currentTermId');
   const currentTerm = terms.find(t => t.id === currentId);
   if (currentTerm && zodiacCanvas) {
     const targetLon = currentTerm.solarLongitude;
-    zodiacCanvas.rotation = (targetLon - 180) * (Math.PI * 0.8 / 360);
+    zodiacCanvas.rotation = (targetLon - 180) * Math.PI / 180;
     updatePoetryDisplay(store, currentTerm);
   }
 
@@ -147,7 +149,19 @@ function updatePoetryDisplay(store, term) {
   }
 }
 
+/** 是否在移动端（≤768px），移动端不做流式打字，直接一次性展示 */
+function isMobileView() {
+  return typeof window !== 'undefined' && window.innerWidth <= 768;
+}
+
 function streamExplanation(el, explanation, kepu) {
+  // 移动端：一次性输出完整内容，避免用户以为"没显示全"
+  if (isMobileView()) {
+    el.textContent = explanation + (kepu ? '\n\n━━━ 天文小知识 ━━━\n' + kepu : '');
+    el.style.opacity = '1';
+    el.classList.add('expl-visible');
+    return;
+  }
   el.textContent = '';
   el.style.opacity = '1';
   let fullContent = explanation;
@@ -167,6 +181,13 @@ function streamExplanation(el, explanation, kepu) {
 }
 
 function typewriterEffect(el, text, onComplete) {
+  // 移动端：直接显示完整文字
+  if (isMobileView()) {
+    el.textContent = text;
+    el.style.opacity = '1';
+    if (onComplete) setTimeout(onComplete, 100);
+    return;
+  }
   el.textContent = '';
   el.style.opacity = '1';
   let i = 0;
