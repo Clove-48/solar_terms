@@ -2084,6 +2084,7 @@ input[type="range"]::-moz-range-thumb {
   min-height: 44px;
   user-select: none;
   -webkit-user-select: none;
+  touch-action: manipulation; /* 消除移动端 300ms 点击延迟 */
 }
 
 .term-picker-chip:hover {

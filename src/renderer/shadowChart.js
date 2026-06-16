@@ -131,6 +131,9 @@ export function renderShadowChart(canvas, terms, currentTermId, onSelect) {
     ctx.stroke();
   }
 
+  // 判断移动端
+  const isNarrow = w < 500;
+
   // 柱子
   data.forEach((d, i) => {
     const x = 40 + (i / data.length) * (w - 40) + barGap / 2;
@@ -171,13 +174,38 @@ export function renderShadowChart(canvas, terms, currentTermId, onSelect) {
       ctx.strokeRect(x - 1, y - 1, barW + 2, barH + 2);
     }
 
-    // 名称
-    ctx.fillStyle = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.5)';
-    ctx.font = isCurrent ? 'bold 10px "Noto Serif SC", serif' : '9px "Noto Serif SC", serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    const name = d.name.length > 2 ? d.name.substring(0, 2) : d.name;
-    ctx.fillText(name, x + barW / 2, baseY + 6);
+    // 名称（移动端交错显示避免重叠）
+    if (isNarrow) {
+      // 窄屏：只显示奇数索引+高亮项，文字用单字符
+      if (i % 2 === 0 && !isCurrent) {
+        // 只显示影长数值（顶部）
+        if (barH > 18) {
+          ctx.fillStyle = 'rgba(212, 165, 116, 0.5)';
+          ctx.font = '8px "JetBrains Mono", monospace';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText(d.shadow.toFixed(1), x + barW / 2, y - 2);
+        }
+        return;
+      }
+      const shortName = d.name.substring(0, 1);
+      ctx.save();
+      // 在柱子下方旋转45度绘制单字
+      ctx.translate(x + barW / 2, baseY + 10);
+      ctx.rotate(-Math.PI / 4);
+      ctx.fillStyle = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.6)';
+      ctx.font = isCurrent ? 'bold 9px "Noto Serif SC", serif' : '8px "Noto Serif SC", serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(shortName, 0, 0);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.5)';
+      ctx.font = isCurrent ? 'bold 10px "Noto Serif SC", serif' : '9px "Noto Serif SC", serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const name = d.name.length > 2 ? d.name.substring(0, 2) : d.name;
+      ctx.fillText(name, x + barW / 2, baseY + 6);
+    }
 
     // 影长数值（顶部）
     if (barH > 18) {

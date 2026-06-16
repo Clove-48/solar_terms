@@ -92,6 +92,20 @@ export async function mount(store) {
 
 function navigateToDetail(store, termId) {
   const id = parseInt(termId, 10);
+
+  // 立即隐藏科普卡片，避免页面过渡时卡片残留可见
+  const explEl = document.getElementById('poem-explanation');
+  if (explEl) {
+    explEl.style.display = 'none';
+    explEl.classList.remove('expl-visible', 'expl-left', 'expl-right');
+    explEl.textContent = '';
+  }
+  // 立即隐藏诗句区域
+  const leftEl = document.getElementById('poem-left');
+  const rightEl = document.getElementById('poem-right');
+  if (leftEl) { leftEl.textContent = ''; leftEl.classList.remove('poem-visible'); }
+  if (rightEl) { rightEl.textContent = ''; rightEl.classList.remove('poem-visible'); }
+
   store.set('currentTermId', id);
   events.emit(EventTypes.TERM_SELECTED, { termId: id });
   // 播放季节音效 + 页面切换音效
@@ -126,6 +140,7 @@ function updatePoetryDisplay(store, term) {
   if (explEl) {
     explEl.classList.remove('expl-visible', 'expl-left', 'expl-right');
     explEl.textContent = '';
+    explEl.style.opacity = '0'; // 立即隐藏，避免 CSS transition 延迟
   }
 
   if (isLeft) {

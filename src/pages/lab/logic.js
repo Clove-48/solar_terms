@@ -242,8 +242,8 @@ export async function mount(store) {
       panel.hidden = false;
       toggleBtn.setAttribute('aria-expanded', 'true');
       toggleBtn.classList.add('open');
-      // 暂时禁用视频容器的 pointer-events，iframe 不再遮挡下拉
-      videoContainers.forEach(el => { el.style.pointerEvents = 'none'; });
+      // 暂时隐藏视频容器（visibility:hidden 比 pointer-events:none 更彻底，让 iframe 不再渲染在面板上方）
+      videoContainers.forEach(el => { el.style.visibility = 'hidden'; });
       // 滚动到当前选中项
       const active = panel.querySelector('.term-picker-chip.active');
       if (active && typeof active.scrollIntoView === 'function') {
@@ -257,8 +257,8 @@ export async function mount(store) {
       panel.hidden = true;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.classList.remove('open');
-      // 恢复视频容器的 pointer-events
-      videoContainers.forEach(el => { el.style.pointerEvents = ''; });
+      // 恢复视频容器的可见性
+      videoContainers.forEach(el => { el.style.visibility = ''; });
     };
 
     const onToggleClick = (e) => {
@@ -285,10 +285,24 @@ export async function mount(store) {
       closePanel();
     };
     panel.addEventListener('click', onPanelClick);
+
+    // 移动端 touch 兜底：解决部分浏览器 click 不触发的问题
+    const onPanelTouch = (e) => {
+      const chip = e.target.closest('.term-picker-chip');
+      if (!chip) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const id = Number(chip.dataset.termId);
+      applyTerm(id);
+      closePanel();
+    };
+    panel.addEventListener('touchstart', onPanelTouch, { passive: false });
+
     _cleanupFns.push(() => {
       panel.removeEventListener('click', onPanelClick);
-      // 确保 unmount 时复原视频容器指针事件
-      videoContainers.forEach(el => { el.style.pointerEvents = ''; });
+      panel.removeEventListener('touchstart', onPanelTouch);
+      // 确保 unmount 时复原视频容器可见性
+      videoContainers.forEach(el => { el.style.visibility = ''; });
     });
   }
 }

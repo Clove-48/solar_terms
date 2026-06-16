@@ -195,11 +195,11 @@ function renderRichScience(term, allTerms) {
   // 设置视频折叠/展开
   setupVideoToggle(container);
 
+  // 先触发卷轴展开动画（立即注入 iframe），再设置观察器
+  triggerScrollOpen(container);
+
   // 设置滚动可见性暂停/恢复
   setupVideoObserver(container);
-
-  // 触发卷轴展开动画
-  triggerScrollOpen(container);
 }
 
 /** 渲染增强民俗内容 */
@@ -377,38 +377,52 @@ function getHealthTip(id) {
 
 /**
  * 触发卷轴展开动画
- * 1. 卷轴轴杆从中间向两侧移开
- * 2. 视频区域从中间裁剪展开
- * 3. 动画结束后才注入 iframe，避免 B 站 player 缓存污染导致的封面错乱
+ * 1. 立即注入 iframe（利用 clip-path 隐藏，提前开始加载）
+ * 2. 卷轴轴杆从中间向两侧移开（视觉动画不受影响）
+ * 3. 动画结束后移除 clip-path，视频已预加载完成
  */
 function triggerScrollOpen(container) {
   const frame = container.querySelector('.guo-video-frame');
   if (!frame) return;
 
-  // 延迟触发，让DOM渲染完成
+  // 立即注入 iframe，利用 clip-path: inset(0 50% 0 50%) 隐藏，
+  // 让 B 站视频在卷轴动画期间提前加载
+  const inner = frame.querySelector('.guo-video-inner');
+  const placeholder = frame.querySelector('.guo-video-placeholder');
+  const termId = Number(container.querySelector('.guo-video-container')?.dataset.videoTerm) || 1;
+
+  if (inner) {
+    // 先移除 placeholder
+    if (placeholder) placeholder.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.className = 'guo-video-embed';
+    iframe.src = getVideoUrl(termId);
+    iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
+    iframe.setAttribute('allowfullscreen', '');
+    iframe.setAttribute('loading', 'eager');
+    iframe.setAttribute('title', '节气科普');
+    iframe.style.touchAction = 'auto';
+    // 初始透明度极低，避免闪白，动画结束后恢复
+    iframe.style.opacity = '0.01';
+    iframe.dataset.preloaded = 'true';
+    inner.appendChild(iframe);
+  }
+
+  // 延迟触发卷轴展开动画，让 DOM 渲染完成
   setTimeout(() => {
     frame.classList.add('scroll-opening');
 
-    // 动画1.2s结束后：移除clip-path + 注入对应节气的iframe
+    // 动画 1.2s 结束后：移除 clip-path + 恢复 iframe 可见
     setTimeout(() => {
-      const inner = frame.querySelector('.guo-video-inner');
       if (inner) {
         inner.style.clipPath = 'none';
         inner.style.animation = 'none';
       }
-      const placeholder = frame.querySelector('.guo-video-placeholder');
-      if (placeholder) placeholder.remove();
-
-      const termId = Number(container.querySelector('.guo-video-container')?.dataset.videoTerm) || 1;
-      const iframe = document.createElement('iframe');
-      iframe.className = 'guo-video-embed';
-      iframe.src = getVideoUrl(termId);
-      iframe.setAttribute('allow', 'autoplay; fullscreen; encrypted-media; picture-in-picture');
-      iframe.setAttribute('allowfullscreen', '');
-      iframe.setAttribute('loading', 'eager');
-      iframe.setAttribute('title', '节气科普');
-      iframe.style.touchAction = 'auto';
-      if (inner) inner.appendChild(iframe);
+      const existingIframe = inner?.querySelector('.guo-video-embed');
+      if (existingIframe) {
+        existingIframe.style.opacity = '1';
+      }
     }, 1300);
   }, 100);
 }
@@ -433,27 +447,33 @@ function setupVideoToggle(container) {
 
 /**
  * 设置视频滚动可见性暂停/恢复
- * 视频划出视口自动暂停，划回自动恢复播放
+ * 视频划出视口 src → about:blank 强制暂停（B站 embed 不支持 postMessage 的 play/pause）
+ * 划回视口从 data-orig-src 恢复加载
  */
 function setupVideoObserver(container) {
   const videoContainer = container.querySelector('.guo-video-container');
-  const iframe = container.querySelector('.guo-video-embed');
-  if (!videoContainer || !iframe) return;
+  if (!videoContainer) return;
 
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       const targetIframe = entry.target.querySelector('.guo-video-embed');
-      if (!targetIframe || !targetIframe.src) return;
-      try {
-        if (entry.isIntersecting) {
-          // 进入视口 → 恢复播放
-          targetIframe.contentWindow.postMessage({ type: 'play' }, '*');
-        } else {
-          // 离开视口 → 暂停
-          targetIframe.contentWindow.postMessage({ type: 'pause' }, '*');
+      if (!targetIframe) return;
+
+      if (entry.isIntersecting) {
+        // 回到视口 → 从 data-orig-src 恢复
+        const origSrc = targetIframe.dataset.origSrc;
+        if (origSrc && targetIframe.src !== origSrc) {
+          try { targetIframe.src = origSrc; } catch (_) {}
         }
-      } catch (e) {
-        // 跨域通信错误静默忽略
+      } else {
+        // 离开视口 → blank 掉，记录原始 src
+        const current = targetIframe.src;
+        if (current && !current.startsWith('about:')) {
+          try {
+            targetIframe.dataset.origSrc = current;
+            targetIframe.src = 'about:blank';
+          } catch (_) {}
+        }
       }
     });
   }, { threshold: 0.3 });
