@@ -227,36 +227,23 @@ export async function mount(store) {
     };
     applyTerm(currentId);
 
-    // ── 下拉面板：teleport 到 body 以彻底跳出 iframe 层叠遮挡 ──
-    const originalParent = panel.parentNode;
-    const originalNextSibling = panel.nextSibling;
+    // ── 收集视频容器引用 ──
+    const videoContainers = [
+      document.querySelector('#gnomon-video-mount .guo-video-container'),
+      document.querySelector('#sundial-video-mount .guo-video-container'),
+    ].filter(Boolean);
 
+    // ── 下拉面板：保持在原位置（position:absolute），只通过 pointer-events 控制视频容器 ──
     let isOpen = false;
-    let repositionRaf = 0;
 
-    const teleportOpen = () => {
+    const openPanel = () => {
       if (isOpen) return;
       isOpen = true;
-
-      // 把面板切到 body，脱离原容器（overflow / iframe 层叠问题）
-      panel.remove();
-      document.body.appendChild(panel);
-
-      // 根据 toggle 按钮定位
-      const rect = toggleBtn.getBoundingClientRect();
-      Object.assign(panel.style, {
-        position: 'fixed',
-        top: `${rect.bottom + 6}px`,
-        left: `${rect.left}px`,
-        width: `${rect.width}px`,
-        maxHeight: 'min(60vh, 360px)',
-        zIndex: '99999',
-      });
-      panel.classList.add('is-open');
       panel.hidden = false;
       toggleBtn.setAttribute('aria-expanded', 'true');
       toggleBtn.classList.add('open');
-
+      // 暂时禁用视频容器的 pointer-events，iframe 不再遮挡下拉
+      videoContainers.forEach(el => { el.style.pointerEvents = 'none'; });
       // 滚动到当前选中项
       const active = panel.querySelector('.term-picker-chip.active');
       if (active && typeof active.scrollIntoView === 'function') {
@@ -264,57 +251,27 @@ export async function mount(store) {
       }
     };
 
-    const teleportClose = () => {
+    const closePanel = () => {
       if (!isOpen) return;
       isOpen = false;
-
-      // 移除内联定位样式
-      panel.style.position = '';
-      panel.style.top = '';
-      panel.style.left = '';
-      panel.style.width = '';
-      panel.style.maxHeight = '';
-      panel.style.zIndex = '';
-      panel.classList.remove('is-open');
       panel.hidden = true;
       toggleBtn.setAttribute('aria-expanded', 'false');
       toggleBtn.classList.remove('open');
-
-      // 移回原始父节点
-      panel.remove();
-      if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
-        originalParent.insertBefore(panel, originalNextSibling);
-      } else {
-        originalParent.appendChild(panel);
-      }
-    };
-
-    const repositionPanel = () => {
-      if (!isOpen) return;
-      const rect = toggleBtn.getBoundingClientRect();
-      panel.style.top = `${rect.bottom + 6}px`;
-      panel.style.left = `${rect.left}px`;
-      panel.style.width = `${rect.width}px`;
-    };
-    const scheduleReposition = () => {
-      if (repositionRaf) return;
-      repositionRaf = requestAnimationFrame(() => {
-        repositionRaf = 0;
-        repositionPanel();
-      });
+      // 恢复视频容器的 pointer-events
+      videoContainers.forEach(el => { el.style.pointerEvents = ''; });
     };
 
     const onToggleClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (isOpen) teleportClose(); else teleportOpen();
+      if (isOpen) closePanel(); else openPanel();
     };
     toggleBtn.addEventListener('click', onToggleClick);
     _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
 
     const onDocClick = (e) => {
       if (!isOpen) return;
-      if (picker && !picker.contains(e.target) && !panel.contains(e.target)) teleportClose();
+      if (picker && !picker.contains(e.target)) closePanel();
     };
     document.addEventListener('click', onDocClick);
     _cleanupFns.push(() => document.removeEventListener('click', onDocClick));
@@ -325,20 +282,13 @@ export async function mount(store) {
       e.stopPropagation();
       const id = Number(chip.dataset.termId);
       applyTerm(id);
-      teleportClose();
+      closePanel();
     };
     panel.addEventListener('click', onPanelClick);
-    _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));
-
-    // 滚动/缩放时重新定位
-    window.addEventListener('resize', scheduleReposition);
-    window.addEventListener('scroll', scheduleReposition, true);
     _cleanupFns.push(() => {
-      window.removeEventListener('resize', scheduleReposition);
-      window.removeEventListener('scroll', scheduleReposition, true);
-      if (repositionRaf) { cancelAnimationFrame(repositionRaf); repositionRaf = 0; }
-      // 确保 unmount 时面板不在 body 上遗留
-      if (isOpen) teleportClose();
+      panel.removeEventListener('click', onPanelClick);
+      // 确保 unmount 时复原视频容器指针事件
+      videoContainers.forEach(el => { el.style.pointerEvents = ''; });
     });
   }
 }

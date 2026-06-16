@@ -107,7 +107,7 @@ const PAGES = {
   `,
   lab: `
     <div class="page-fullscreen flex-col" id="lab-page">
-      <header class="header-fixed" style="display:flex;align-items:center;gap:var(--spacing-md);">
+      <header class="header-fixed" style="position:fixed !important;display:flex;align-items:center;gap:var(--spacing-md);z-index:999;top:0;left:0;right:0;padding:var(--spacing-md) var(--spacing-md) 10px;background:var(--bg-deep);">
         <button id="btn-lab-back" class="touch-target data-label" style="color:var(--accent-gold);">← 返回</button>
         <h2 class="science-title" style="flex:1;color:var(--foreground-primary);">循时 · 科学实验室</h2>
       </header>
