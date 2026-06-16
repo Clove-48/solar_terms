@@ -162,6 +162,11 @@ export class SeasonalAmbience {
 
   /**
    * 获取季节参数
+   * 参考 white-noises.com 的白噪音色调分类：
+   * - 春：雨声（rain）+ 鸟鸣（birds）→ 高频噪音 + 啁啾调制
+   * - 夏：溪流（stream）+ 蝉鸣（crickets）→ 低频流水 + 高频颤音
+   * - 秋：风声（wind）+ 落叶（leaves rustle）→ 中频噪音 + 短促脉冲
+   * - 冬：风雪（storm）+ 寂静（silence）→ 低频呼啸 + 几乎无音调
    */
   _getSeasonParams(season) {
     switch (season) {
@@ -176,30 +181,30 @@ export class SeasonalAmbience {
         };
       case 'summer':
         return {
-          noiseVolume: 0.20,     // 潺潺溪流（低噪）
-          toneVolume: 0.45,      // 嘹亮蝉鸣
-          noiseFreq: 400,        // 低频流水
+          noiseVolume: 0.30,     // 潺潺溪流（低噪 + 中频白噪混合）
+          toneVolume: 0.40,      // 嘹亮蝉鸣
+          noiseFreq: 600,        // 低中频流水
           toneFreq: 4800,
           lfoFreq: 6,
           lfoDepth: 600,
         };
       case 'autumn':
         return {
-          noiseVolume: 0.40,     // 秋风
-          toneVolume: 0.15,      // 稀疏落叶声
-          noiseFreq: 1200,       // 中频风声
-          toneFreq: 600,
+          noiseVolume: 0.42,     // 秋风
+          toneVolume: 0.18,      // 稀疏落叶声
+          noiseFreq: 1100,       // 中频风声
+          toneFreq: 700,
           lfoFreq: 3,
-          lfoDepth: 150,
+          lfoDepth: 180,
         };
       case 'winter':
         return {
           noiseVolume: 0.50,     // 寒风呼啸
-          toneVolume: 0.05,      // 几乎无音调
-          noiseFreq: 300,        // 低频风声
+          toneVolume: 0.05,      // 几乎无音调（冬夜寂静）
+          noiseFreq: 280,        // 低频风声
           toneFreq: 200,
-          lfoFreq: 1.5,
-          lfoDepth: 100,
+          lfoFreq: 1.2,
+          lfoDepth: 80,
         };
       default:
         return {

@@ -1,17 +1,22 @@
 /**
  * lab 页面逻辑 — 科学实验室（纯触控版）
- * 圭表测影互动 + 日晷模拟
+ * 圭表测影互动 + 日晷模拟 + 视频科普
  */
 import { GnomonCanvas } from '../../renderer/gnomonCanvas.js';
 import { SundialCanvas } from '../../renderer/sundialCanvas.js';
+import { renderShadowChart, pickTermFromChart } from '../../renderer/shadowChart.js';
 import { calcSunDeclination, calcNoonAltitude, calcShadowLength, getShadowDescription } from '../../business/gnomon.js';
 import { calcDayLength, formatDayLength, calcDirectPoint, formatDirectPoint, getDayNightRatio, calcSunriseSunset } from '../../business/sunPosition.js';
 import { getDataByDayOfYear } from '../../business/calendar.js';
+import { createVideoEmbed, VIDEO_BVIDS } from '../../utils/videoEmbed.js';
 
 let gnomonCanvas = null;
 let sundialCanvas = null;
 // 收集所有事件监听器 + 计时器，unmount 时统一清理，避免内存泄漏/卡顿
 let _cleanupFns = [];
+let _chartCanvas = null;
+let _chartTerms = [];
+let _currentSundialTerm = null;
 
 export async function mount(store) {
   const terms = store.get('solarTerms') || window.__solarTerms || [];
@@ -44,6 +49,45 @@ export async function mount(store) {
     updateGnomon(80);
   }
 
+  // ── 圭表 24 节气影长柱状图 ──
+  _chartCanvas = document.getElementById('gnomon-chart-canvas');
+  _chartTerms = terms;
+  if (_chartCanvas) {
+    // 初次渲染（无选中态）
+    renderShadowChart(_chartCanvas, _chartTerms, null, null);
+
+    // 柱状图点击 → 跳转详情页
+    const onChartClick = (e) => {
+      const rect = _chartCanvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (window.devicePixelRatio || 1);
+      const y = (e.clientY - rect.top) * (window.devicePixelRatio || 1);
+      const termId = pickTermFromChart(_chartCanvas, x / (window.devicePixelRatio || 1), y / (window.devicePixelRatio || 1));
+      if (termId) {
+        // 跳转到对应详情页
+        location.hash = `#detail?id=${termId}`;
+      }
+    };
+    _chartCanvas.addEventListener('click', onChartClick);
+    _cleanupFns.push(() => _chartCanvas.removeEventListener('click', onChartClick));
+
+    // 窗口大小变化时重绘
+    const onChartResize = () => renderShadowChart(_chartCanvas, _chartTerms, null, null);
+    window.addEventListener('resize', onChartResize);
+    _cleanupFns.push(() => window.removeEventListener('resize', onChartResize));
+  }
+
+  // ── 视频科普：圭表测影（详情页式样卷轴） ──
+  const gnomonVideoMount = document.getElementById('gnomon-video-mount');
+  if (gnomonVideoMount) {
+    createVideoEmbed({
+      container: gnomonVideoMount,
+      bvid: VIDEO_BVIDS.gnomon,
+      title: '圭表测影 · 视频科普',
+      source: 'B站科普',
+      icon: '◆',
+    });
+  }
+
   // ── 日晷模拟 ──
   const sundialCvs = document.getElementById('sundial-canvas');
   if (sundialCvs) {
@@ -57,15 +101,14 @@ export async function mount(store) {
   const sunriseLabel = document.getElementById('sundial-sunrise-label');
   const SHICHEN_NAMES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
   const getShichenName = (h) => SHICHEN_NAMES[Math.floor(((h + 1) % 24) / 2)];
-  let currentSundialTerm = null;
 
   if (timeSlider) {
     const onTimeSliderInput = () => {
       const h = parseInt(timeSlider.value);
       const shichen = getShichenName(h);
       if (shichenLabel) shichenLabel.textContent = `${shichen}时 (${String(h).padStart(2,'0')}:00)`;
-      if (currentSundialTerm) {
-        requestAnimationFrame(() => renderSundial(currentSundialTerm, h));
+      if (_currentSundialTerm) {
+        requestAnimationFrame(() => renderSundial(_currentSundialTerm, h));
       }
     };
     timeSlider.addEventListener('input', onTimeSliderInput);
@@ -75,6 +118,19 @@ export async function mount(store) {
   const toggleBtn = document.getElementById('sundial-term-toggle');
   const labelEl = document.getElementById('sundial-term-label');
   const panel = document.getElementById('sundial-term-panel');
+  // 视频科普：日晷（详情页式样卷轴） — 放在面板区之外，置于整个日晷卡片之后
+  // 此处仅在 picker 初始化后挂载一次
+  const sundialVideoMount = document.getElementById('sundial-video-mount');
+  if (sundialVideoMount && !sundialVideoMount.dataset.mounted) {
+    sundialVideoMount.dataset.mounted = '1';
+    createVideoEmbed({
+      container: sundialVideoMount,
+      bvid: VIDEO_BVIDS.sundial,
+      title: '日晷模拟 · 视频科普',
+      source: 'B站科普',
+      icon: '◇',
+    });
+  }
   if (toggleBtn && panel && terms.length) {
     // 按季节填充 term
     const seasonMap = { spring: [], summer: [], autumn: [], winter: [] };
@@ -104,13 +160,17 @@ export async function mount(store) {
     const applyTerm = (id) => {
       const term = terms.find(t => t.id === id);
       if (!term) return;
-      currentSundialTerm = term;
+      _currentSundialTerm = term;
       if (labelEl) labelEl.textContent = `${term.name} · 黄经 ${term.solarLongitude}°`;
       setActiveChip(id);
       // 获取当前时间滑块值
       const currentHour = timeSlider ? parseInt(timeSlider.value) : 12;
       // 使用 requestAnimationFrame 让数据卡片先更新，再异步重绘 canvas，避免同步渲染卡顿
       requestAnimationFrame(() => renderSundial(term, currentHour));
+      // 同步刷新影长柱状图高亮
+      if (_chartCanvas) {
+        renderShadowChart(_chartCanvas, _chartTerms, id, null);
+      }
     };
     applyTerm(currentId);
 

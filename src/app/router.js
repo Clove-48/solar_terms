@@ -112,9 +112,36 @@ const PAGES = {
         <h2 class="science-title" style="flex:1;color:var(--foreground-primary);">循时 · 科学实验室</h2>
       </header>
       <div class="hide-scrollbar" style="flex:1;overflow-y:auto;padding:80px var(--spacing-md) var(--spacing-md);">
+
+        <!-- 科普导言：什么是圭表与日晷 -->
+        <div class="card" style="margin-bottom:var(--spacing-lg);border-left:2px solid var(--accent-gold);background:linear-gradient(135deg,rgba(212,165,116,0.08) 0%,rgba(212,165,116,0.02) 100%);">
+          <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-sm);color:var(--accent-gold);">· 古人的测时智慧</h3>
+          <p class="body-science" style="font-size:13px;color:var(--muted-ink);line-height:1.7;">
+            在没有钟表的远古时代，<b style="color:var(--accent-gold);">太阳与影子</b>是古人最可靠的"时钟"。
+            两千多年前，中国人发明了两种巧妙的测时仪器：
+            <b style="color:var(--accent-cyan);">圭表</b>用于测定"一年之中"的节令（测季节），
+            <b style="color:var(--accent-cyan);">日晷</b>用于测定"一天之中"的时辰（测时刻）。
+          </p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--spacing-sm);margin-top:var(--spacing-md);font-size:11px;color:var(--muted-ink);">
+            <div style="padding:8px;background:rgba(212,165,116,0.06);border-radius:var(--radius-xs);text-align:center;">
+              <div style="color:var(--accent-gold);font-weight:bold;margin-bottom:2px;">圭表 · 立竿见影</div>
+              <div style="opacity:0.8;">一根高8尺的"表"+ 平铺的"圭"（量天尺）</div>
+            </div>
+            <div style="padding:8px;background:rgba(212,165,116,0.06);border-radius:var(--radius-xs);text-align:center;">
+              <div style="color:var(--accent-gold);font-weight:bold;margin-bottom:2px;">日晷 · 影随日转</div>
+              <div style="opacity:0.8;">一根指向北极的"晷针"+ 刻有十二时辰的"晷面"</div>
+            </div>
+          </div>
+        </div>
+
         <!-- 圭表测影 -->
         <div class="card" style="margin-bottom:var(--spacing-lg);border-left:2px solid var(--accent-gold);">
-          <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-sm);color:var(--accent-gold);">· 圭表测影</h3>
+          <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-xs);color:var(--accent-gold);">· 圭表测影</h3>
+          <p class="data-label" style="font-size:11px;color:var(--muted-ink);margin-bottom:var(--spacing-sm);line-height:1.5;">
+            <b style="color:var(--accent-gold);">原理：</b>"表"垂直立于地面，正午时阳光从南射来，表影投在水平"圭"上。
+            一年中<b style="color:var(--accent-cyan);">夏至影最短（约0.5尺）、冬至影最长（约15尺）</b>，
+            由此可定回归年长度（365.2425天）。
+          </p>
           <div style="display:flex;gap:var(--spacing-sm);margin-bottom:var(--spacing-md);">
             <div class="lab-data-card" style="flex:1;">
               <div class="lab-data-value" id="gnomon-shadow">8.00</div>
@@ -139,11 +166,25 @@ const PAGES = {
           <p class="body-science" style="margin-top:var(--spacing-md);font-size:13px;color:var(--muted-ink);line-height:1.6;" id="gnomon-description">
             拖动滑块改变日期，观察正午圭表影长变化。夏至影最短，冬至影最长。
           </p>
+          <!-- 24节气影长柱状图（点击可跳转） -->
+          <h4 class="science-title" style="font-size:14px;margin-top:var(--spacing-md);margin-bottom:var(--spacing-xs);color:var(--accent-gold);">24节气影长对照</h4>
+          <canvas id="gnomon-chart-canvas" style="width:100%;height:220px;margin-bottom:var(--spacing-sm);border-radius:var(--radius-sm);"></canvas>
+          <p class="data-label" style="font-size:10px;color:var(--muted-ink);text-align:center;opacity:0.7;">
+            点击柱状条查看对应节气的圭表测影
+          </p>
         </div>
+
+        <!-- 圭表测影 · 视频科普（详情页式样卷轴） -->
+        <div id="gnomon-video-mount" style="margin-bottom:var(--spacing-lg);"></div>
 
         <!-- 日晷模拟 -->
         <div class="card" style="margin-bottom:var(--spacing-lg);border-left:2px solid var(--accent-gold);">
-          <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-sm);color:var(--accent-gold);">· 日晷模拟</h3>
+          <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-xs);color:var(--accent-gold);">· 日晷模拟</h3>
+          <p class="data-label" style="font-size:11px;color:var(--muted-ink);margin-bottom:var(--spacing-sm);line-height:1.5;">
+            <b style="color:var(--accent-gold);">原理：</b>"晷针"垂直穿过刻有十二时辰的"晷面"，指向南北天极。
+            随着太阳东升西落，<b style="color:var(--accent-cyan);">晷针的影子在晷面上均匀旋转</b>，
+            读出影子所指的时辰。这就是"立竿见影、指日可待"的由来。
+          </p>
           <!-- 日晷数据卡片 -->
           <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--spacing-sm);margin-bottom:var(--spacing-md);">
             <div class="lab-data-card">
@@ -208,9 +249,14 @@ const PAGES = {
             <span class="data-label" style="color:var(--accent-gold);font-size:10px;" id="sundial-sunrise-label">日出: --</span>
           </div>
           <p class="body-science" style="margin-top:var(--spacing-md);font-size:13px;color:var(--muted-ink);line-height:1.6;">
-            选择不同节气，观察日晷指针阴影随太阳高度角的变化。
+            切换节气观察盘面变化：夏至时晷针影子短而指向盘心（太阳高悬），
+            冬至时晷针影子长而指向盘缘（太阳低斜）。拖动时辰滑块，观看影子在十二时辰中匀速旋转。
           </p>
         </div>
+
+        <!-- 日晷模拟 · 视频科普（详情页式样卷轴） -->
+        <div id="sundial-video-mount" style="margin-bottom:var(--spacing-lg);"></div>
+
       </div>
     </div>
   `
