@@ -265,9 +265,10 @@
 
   /* ── 节气选择器（移动端优化） ── */
   .term-picker-btn { font-size: 13px; padding: 8px 12px; min-height: 40px; }
-  .term-picker-chip-name { font-size: 13px; }
-  .term-picker-chip-lon { font-size: 8.5px; }
-  .term-picker-panel { max-height: 280px; }
+  .term-picker-chip { padding: 4px 2px; min-height: 36px; }
+  .term-picker-chip-name { font-size: 12px; }
+  .term-picker-chip-lon { font-size: 7.5px; }
+  .term-picker-panel { max-height: min(440px, 62vh); }
 
   /* ── 科学数据网格 ── */
   .data-grid .data-value { font-size: 18px; }
