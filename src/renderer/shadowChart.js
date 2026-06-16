@@ -13,28 +13,32 @@
 
 const POLE_HEIGHT = 8; // 古代标准圭表：8 尺（≈2.4m）
 
-// 24 节气正午影长（尺，简化模型：表高 × |cot(高度角)|）
-// 高度角 = 90 - |纬度 - 太阳直射点纬度|
-// 登封纬度 ≈ 34.4°，太阳直射点纬度 = 23.4° × sin((黄经 - 90) × π/180)
-const DENGFENG_LAT = 34.4;
+// 与 business/gnomon.js、business/calendar.js 保持一致的计算参数
+const OBLIQUITY_DEG = 23.44;   // 黄赤交角
+const OBSERVER_LAT_DEG = 34;   // 登封观测点纬度
+const OBSERVER_LAT_RAD = OBSERVER_LAT_DEG * Math.PI / 180;
 
 /**
- * 计算给定黄经的太阳直射点纬度
+ * 计算太阳赤纬（度）— 与 gnomon.js/calendar.js 保持一致
+ * δ = arcsin(sin(λ) × sin(ε))
  */
-function calcDirectLat(longitude) {
-  return 23.4 * Math.sin((longitude - 90) * Math.PI / 180);
+function calcDeclinationDeg(longitude) {
+  const lonRad = longitude * Math.PI / 180;
+  const obliquityRad = OBLIQUITY_DEG * Math.PI / 180;
+  return Math.asin(Math.sin(lonRad) * Math.sin(obliquityRad)) * 180 / Math.PI;
 }
 
 /**
- * 计算正午影长（单位：尺）
- * 公式：影长 = 表高 × cot(90° - |lat - δ|) = 表高 × tan(|lat - δ|)
+ * 计算正午影长（单位：尺）— 与 gnomon.js/calendar.js 完全一致
+ * 公式：影长 = h / tan(90° - |φ - δ|)
  */
 export function calcShadowLengthChi(longitude) {
-  const directLat = calcDirectLat(longitude);
-  const diff = Math.abs(DENGFENG_LAT - directLat);
-  // 接近 0 时（夏至直射本地），影长趋近 0
-  if (diff < 0.5) return 0.5;
-  return POLE_HEIGHT * Math.tan(diff * Math.PI / 180);
+  const declDeg = calcDeclinationDeg(longitude);
+  const diffDeg = Math.abs(OBSERVER_LAT_DEG - declDeg);
+  const altitudeDeg = 90 - diffDeg;
+  if (altitudeDeg <= 1) return 20;
+  const altitudeRad = altitudeDeg * Math.PI / 180;
+  return POLE_HEIGHT / Math.tan(altitudeRad);
 }
 
 /**
@@ -176,7 +180,7 @@ export function renderShadowChart(canvas, terms, currentTermId, onSelect) {
 
     // 名称（移动端交错显示避免重叠）
     if (isNarrow) {
-      // 窄屏：只显示奇数索引+高亮项，文字用单字符
+      // 窄屏：只显示奇数索引+高亮项，文字垂直堆叠（第一字在上，第二字在下）
       if (i % 2 === 0 && !isCurrent) {
         // 只显示影长数值（顶部）
         if (barH > 18) {
@@ -187,17 +191,17 @@ export function renderShadowChart(canvas, terms, currentTermId, onSelect) {
         }
         return;
       }
-      const shortName = d.name.substring(0, 1);
-      ctx.save();
-      // 在柱子下方旋转45度绘制单字
-      ctx.translate(x + barW / 2, baseY + 10);
-      ctx.rotate(-Math.PI / 4);
-      ctx.fillStyle = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.6)';
-      ctx.font = isCurrent ? 'bold 9px "Noto Serif SC", serif' : '8px "Noto Serif SC", serif';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(shortName, 0, 0);
-      ctx.restore();
+      // 垂直堆叠两个字符
+      const labelColor = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.6)';
+      const labelFont = isCurrent ? 'bold 8px "Noto Serif SC", serif' : '7px "Noto Serif SC", serif';
+      ctx.fillStyle = labelColor;
+      ctx.font = labelFont;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const chars = d.name.split('');
+      chars.forEach((ch, ci) => {
+        ctx.fillText(ch, x + barW / 2, baseY + 8 + ci * 8);
+      });
     } else {
       ctx.fillStyle = isCurrent ? 'rgba(255, 220, 100, 0.95)' : 'rgba(212, 165, 116, 0.5)';
       ctx.font = isCurrent ? 'bold 10px "Noto Serif SC", serif' : '9px "Noto Serif SC", serif';

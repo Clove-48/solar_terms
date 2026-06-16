@@ -268,14 +268,13 @@ export async function mount(store) {
     };
     toggleBtn.addEventListener('click', onToggleClick);
 
-    // 移动端 touch 兜底：立即响应 tap，消除 300ms 延迟
+    // 移动端 touch 兜底：立即响应 tap，并阻止浏览器合成 click 事件
     const onToggleTouch = (e) => {
-      // 仅处理手指按下，不阻止默认（click 仍可触发）
-      // 但 tap 时立即打开/关闭，避免等待 click
+      // 阻止合成 click，避免 touchstart 打开面板后又立即被 click 关闭
+      e.preventDefault();
       if (isOpen) closePanel(); else openPanel();
-      // 不调用 preventDefault，让 click 事件正常合成
     };
-    toggleBtn.addEventListener('touchstart', onToggleTouch, { passive: true });
+    toggleBtn.addEventListener('touchstart', onToggleTouch, { passive: false });
     _cleanupFns.push(() => {
       toggleBtn.removeEventListener('click', onToggleClick);
       toggleBtn.removeEventListener('touchstart', onToggleTouch);

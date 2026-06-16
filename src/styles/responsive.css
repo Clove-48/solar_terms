@@ -257,9 +257,9 @@
   }
 
   /* ── 实验室 ── */
-  .lab-data-card { padding: 10px 12px; }
-  .lab-data-value { font-size: 22px; }
-  .lab-data-label { font-size: 14px; }
+  .lab-data-card { padding: 10px 8px; }
+  .lab-data-value { font-size: 20px; }
+  .lab-data-label { font-size: 11px; white-space: nowrap; overflow: visible; }
   #lab-page canvas { height: 150px; }
   #lab-page .guo-detail-body { padding: 8px 10px; }
 
