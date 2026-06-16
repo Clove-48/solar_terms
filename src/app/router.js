@@ -181,7 +181,7 @@ const PAGES = {
         <div class="card" style="margin-bottom:var(--spacing-lg);border-left:2px solid var(--accent-gold);">
           <h3 class="science-title" style="font-size:18px;margin-bottom:var(--spacing-xs);color:var(--accent-gold);">· 日晷模拟</h3>
           <p class="data-label" style="font-size:11px;color:var(--muted-ink);margin-bottom:var(--spacing-sm);line-height:1.5;">
-            <b style="color:var(--accent-gold);">原理：</b>"晷针"垂直穿过刻有十二时辰的"晷面"，指向南北天极。
+            <b style="color:var(--accent-gold);">原理：</b>晷面平行于天赤道面，晷针平行于地轴、指向北天极。
             随着太阳东升西落，<b style="color:var(--accent-cyan);">晷针的影子在晷面上均匀旋转</b>，
             读出影子所指的时辰。这就是"立竿见影、指日可待"的由来。
           </p>
