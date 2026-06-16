@@ -1951,10 +1951,12 @@ input[type="range"]::-moz-range-thumb {
   transition: border-color 0.2s var(--ease-out),
               box-shadow 0.2s var(--ease-out),
               background 0.2s var(--ease-out);
-  min-height: 42px;
+  min-height: 44px;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
+  touch-action: manipulation; /* 消除移动端 300ms 点击延迟 */
+  -webkit-tap-highlight-color: transparent;
 }
 
 .term-picker-btn:hover {

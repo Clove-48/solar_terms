@@ -216,12 +216,14 @@ export function renderShadowChart(canvas, terms, currentTermId, onSelect) {
     }
   });
 
-  // 标题
+  // 标题：放在季节标签下方（y=16），避免与"春夏秋冬"重叠
   ctx.fillStyle = 'rgba(212, 165, 116, 0.7)';
-  ctx.font = '10px "Noto Serif SC", serif';
-  ctx.textAlign = 'left';
+  ctx.font = isNarrow ? '9px "Noto Serif SC", serif' : '10px "Noto Serif SC", serif';
+  ctx.textAlign = isNarrow ? 'right' : 'left';
   ctx.textBaseline = 'top';
-  ctx.fillText('登封观星台圭表测影 · 表高 8尺', 36, 4);
+  const titleText = isNarrow ? '表高 8尺' : '登封观星台圭表测影 · 表高 8尺';
+  const titleX = isNarrow ? w - 8 : 36;
+  ctx.fillText(titleText, titleX, 16);
 
   // 存储柱子信息供点击
   canvas._chartBars = data.map((d, i) => ({
