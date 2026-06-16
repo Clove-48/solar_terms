@@ -18,6 +18,7 @@ let _chartCanvas = null;
 let _chartTerms = [];
 let _currentSundialTerm = null;
 let _applyTermChartRaf = 0; // 节气切换时合并柱状图重绘的 rAF 句柄
+let _chartHighlightId = null; // 当前柱状图高亮的节气 id（resize 时保留）
 
 export async function mount(store) {
   const terms = store.get('solarTerms') || window.__solarTerms || [];
@@ -66,27 +67,45 @@ export async function mount(store) {
     // 初次渲染（无选中态）
     renderShadowChart(_chartCanvas, _chartTerms, null, null);
 
-    // 柱状图点击 → 跳转详情页
+    // 柱状图点击 → 更新圭表日期滑块，使画面展示该节气的测影
     const onChartClick = (e) => {
       const rect = _chartCanvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (window.devicePixelRatio || 1);
-      const y = (e.clientY - rect.top) * (window.devicePixelRatio || 1);
-      const termId = pickTermFromChart(_chartCanvas, x / (window.devicePixelRatio || 1), y / (window.devicePixelRatio || 1));
-      if (termId) {
-        // 跳转到对应详情页
-        location.hash = `#detail?id=${termId}`;
+      const x = (e.clientX - rect.left);
+      const y = (e.clientY - rect.top);
+      const termId = pickTermFromChart(_chartCanvas, x, y);
+      if (!termId) return;
+      const term = _chartTerms.find(t => t.id === termId);
+      if (!term) return;
+      // 把节气的起始日序解析出来，更新滑块
+      const day = parseTermStartDay(term);
+      if (day === null) return;
+      const slider = document.getElementById('date-slider');
+      if (slider) {
+        slider.value = String(Math.max(0, Math.min(365, day)));
+        // 触发 input 事件以复用现有的滑块监听器（避免重复逻辑）
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      // 高亮柱状图上对应的节气（同时记下 id，resize 时保留高亮）
+      _chartHighlightId = termId;
+      if (_chartCanvas) {
+        if (_applyTermChartRaf) cancelAnimationFrame(_applyTermChartRaf);
+        _applyTermChartRaf = requestAnimationFrame(() => {
+          _applyTermChartRaf = 0;
+          renderShadowChart(_chartCanvas, _chartTerms, termId, null);
+        });
       }
     };
     _chartCanvas.addEventListener('click', onChartClick);
     _cleanupFns.push(() => _chartCanvas.removeEventListener('click', onChartClick));
 
     // 窗口大小变化时重绘（rAF 节流：合并同一帧内多次触发，避免连续重绘卡顿）
+    // 保留当前高亮的节气（避免 resize 把用户刚选中的高亮状态抹掉）
     let chartResizeRaf = 0;
     const onChartResize = () => {
       if (chartResizeRaf) return;
       chartResizeRaf = requestAnimationFrame(() => {
         chartResizeRaf = 0;
-        renderShadowChart(_chartCanvas, _chartTerms, null, null);
+        renderShadowChart(_chartCanvas, _chartTerms, _chartHighlightId, null);
       });
     };
     window.addEventListener('resize', onChartResize);
@@ -160,6 +179,7 @@ export async function mount(store) {
     });
   }
   if (toggleBtn && panel && terms.length) {
+    const picker = document.getElementById('sundial-term-picker');
     // 按季节填充 term
     const seasonMap = { spring: [], summer: [], autumn: [], winter: [] };
     terms.forEach(t => {
@@ -196,6 +216,7 @@ export async function mount(store) {
       // 使用 requestAnimationFrame 让数据卡片先更新，再异步重绘 canvas，避免同步渲染卡顿
       requestAnimationFrame(() => renderSundial(term, currentHour));
       // 同步刷新影长柱状图高亮（节气快速切换时也用 rAF 合并）
+      _chartHighlightId = id;
       if (_chartCanvas) {
         if (_applyTermChartRaf) cancelAnimationFrame(_applyTermChartRaf);
         _applyTermChartRaf = requestAnimationFrame(() => {
@@ -206,27 +227,54 @@ export async function mount(store) {
     };
     applyTerm(currentId);
 
-    // 标记是否正在处理 chip 选择，避免 document click 在 chip click 之后立即关闭面板（移动端 300ms click 延迟下关键）
-    let isSelecting = false;
-    // 追踪待执行的 closePanel 计时器，openPanel/selectChip 时需清理，防止旧计时器在新一次操作后误关闭面板
-    let closeTimer = null;
-    const clearCloseTimer = () => {
-      if (closeTimer !== null) {
-        clearTimeout(closeTimer);
-        closeTimer = null;
-      }
+    // ── 下拉面板：使用 position: fixed 弹出，逃出 overflow:auto 容器 + 视频容器遮挡 ──
+    // 注入一次性的 CSS：把面板提升为 fixed，并通过 CSS 变量定位
+    const POS_STYLE_ID = 'lab-term-picker-pos-style';
+    if (!document.getElementById(POS_STYLE_ID)) {
+      const styleEl = document.createElement('style');
+      styleEl.id = POS_STYLE_ID;
+      styleEl.textContent = `
+        .term-picker-panel.is-open {
+          position: fixed !important;
+          z-index: 9999 !important;
+          top: var(--lab-picker-top, 0px) !important;
+          left: var(--lab-picker-left, 0px) !important;
+          width: var(--lab-picker-width, 0px) !important;
+          max-height: min(60vh, 360px) !important;
+        }
+        .term-picker-panel.is-open[hidden] {
+          display: block !important;
+        }
+      `;
+      document.head.appendChild(styleEl);
+    }
+
+    let isOpen = false;
+    let repositionRaf = 0;
+
+    const positionPanel = () => {
+      if (!isOpen) return;
+      const rect = toggleBtn.getBoundingClientRect();
+      const top = rect.bottom + 6;
+      const left = rect.left;
+      const width = rect.width;
+      panel.style.setProperty('--lab-picker-top', `${top}px`);
+      panel.style.setProperty('--lab-picker-left', `${left}px`);
+      panel.style.setProperty('--lab-picker-width', `${width}px`);
+    };
+    const scheduleReposition = () => {
+      if (repositionRaf) return;
+      repositionRaf = requestAnimationFrame(() => {
+        repositionRaf = 0;
+        positionPanel();
+      });
     };
 
-    // 打开/关闭面板
-    const closePanel = () => {
-      clearCloseTimer();
-      panel.hidden = true;
-      toggleBtn.setAttribute('aria-expanded', 'false');
-      toggleBtn.classList.remove('open');
-    };
     const openPanel = () => {
-      clearCloseTimer();
-      isSelecting = false;
+      if (isOpen) return;
+      isOpen = true;
+      positionPanel();
+      panel.classList.add('is-open');
       panel.hidden = false;
       toggleBtn.setAttribute('aria-expanded', 'true');
       toggleBtn.classList.add('open');
@@ -238,47 +286,49 @@ export async function mount(store) {
         } catch (_) { /* ignore */ }
       }
     };
+    const closePanel = () => {
+      if (!isOpen) return;
+      isOpen = false;
+      panel.classList.remove('is-open');
+      panel.hidden = true;
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.classList.remove('open');
+    };
+
     const onToggleClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (panel.hidden) openPanel(); else closePanel();
+      if (isOpen) closePanel(); else openPanel();
     };
-    // 不再绑定 touchend：移动端 click 事件由浏览器合成（fastclick 已默认启用），空函数 touchend 反而会干扰合成 click 在某些机型上的派发
     toggleBtn.addEventListener('click', onToggleClick);
     _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
 
     const onDocClick = (e) => {
-      // 正在处理选择中（chip click 触发的 50ms 窗口内）→ 忽略 document click，避免吞掉选择
-      if (isSelecting) return;
-      const picker = document.getElementById('sundial-term-picker');
-      if (!panel.hidden && picker && !picker.contains(e.target)) {
-        closePanel();
-      }
+      if (!isOpen) return;
+      if (picker && !picker.contains(e.target)) closePanel();
     };
-    // 使用 capture 阶段 + once 不行（需要多次触发）；改为常规冒泡
     document.addEventListener('click', onDocClick);
     _cleanupFns.push(() => document.removeEventListener('click', onDocClick));
 
     const onPanelClick = (e) => {
       const chip = e.target.closest('.term-picker-chip');
       if (!chip) return;
-      // 阻止冒泡到 document：移动端 click 延迟 300ms 期间，document click 处理器可能在 chip click 之后看到旧事件并误关闭
+      // 阻止冒泡到 document：避免 document click 处理器在 chip click 之后误触发关闭
       e.stopPropagation();
       const id = Number(chip.dataset.termId);
-      isSelecting = true;
       applyTerm(id);
-      // 清理上一次未执行的 closePanel，再排队本次的，避免旧计时器在新一次操作后误关闭
-      clearCloseTimer();
-      closeTimer = setTimeout(() => {
-        closeTimer = null;
-        isSelecting = false;
-        closePanel();
-      }, 60);
+      closePanel();
     };
     panel.addEventListener('click', onPanelClick);
+    _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));
+
+    // 滚动/缩放时重新定位（rAF 合并）；列表本身的滚动交给 panel 的 overflow-y
+    window.addEventListener('resize', scheduleReposition);
+    window.addEventListener('scroll', scheduleReposition, true);
     _cleanupFns.push(() => {
-      panel.removeEventListener('click', onPanelClick);
-      clearCloseTimer();
+      window.removeEventListener('resize', scheduleReposition);
+      window.removeEventListener('scroll', scheduleReposition, true);
+      if (repositionRaf) { cancelAnimationFrame(repositionRaf); repositionRaf = 0; }
     });
   }
 }
@@ -286,6 +336,18 @@ export async function mount(store) {
 // ══════════════════════════════════════════
 //  圭表测影
 // ══════════════════════════════════════════
+
+/** 从节气 date 字符串解析起始日序（"6月5日-7日" → day 156） */
+function parseTermStartDay(term) {
+  if (!term || !term.date) return null;
+  const m = String(term.date).match(/(\d+)月(\d+)日/);
+  if (!m) return null;
+  const month = parseInt(m[1], 10);
+  const day = parseInt(m[2], 10);
+  const d = new Date(2026, month - 1, day);
+  const start = new Date(2026, 0, 0);
+  return Math.floor((d - start) / 86400000);
+}
 
 function updateGnomon(day) {
   const data = getDataByDayOfYear(day);
@@ -367,4 +429,5 @@ export function unmount() {
   if (_applyTermChartRaf) { cancelAnimationFrame(_applyTermChartRaf); _applyTermChartRaf = 0; }
   _chartCanvas = null;
   _currentSundialTerm = null;
+  _chartHighlightId = null;
 }
