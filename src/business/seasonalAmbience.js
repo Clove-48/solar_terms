@@ -1,27 +1,30 @@
 /**
- * seasonalAmbience.js — 四季氛围音频引擎 v2
+ * seasonalAmbience.js — 四季氛围音频引擎 v3
  *
- * 基于 Web Audio API 合成持续背景音频，随季节自动切换：
- * - 春：细雨沙沙 + 清脆鸟鸣
- * - 夏：潺潺溪流 + 嘹亮蝉鸣
- * - 秋：秋风瑟瑟 + 落叶沙沙
- * - 冬：寒风呼啸 + 雪花簌簌
+ * 基于 white-noises.com 的 8 大类白噪音分类：
+ *   自然（雨/风/溪流/海浪/篝火） | 动物（鸟/蝉/蛙） | 物品（时钟/风铃/键盘）
+ *   噪音（白/粉/棕）
+ *
+ * 使用 Web Audio API 实时合成持续背景音（避免外部 CDN 依赖与 CORS 问题）：
+ * - 春：细雨沙沙 + 鸟鸣啁啾 → 高频雨噪声 + 啁啾调制
+ * - 夏：潺潺溪流 + 蝉鸣颤音 → 低频流水 + 高频颤音
+ * - 秋：秋风瑟瑟 + 落叶沙沙 → 中频风声 + 短促脉冲
+ * - 冬：寒风呼啸 + 冬夜寂静 → 低频呼啸 + 几乎静音
+ *
+ * 页面生命周期：
+ * - enable()：进入首页/黄道带，激活播放
+ * - disable()：离开首页，淡出停止
+ * - destroy()：完全销毁
  *
  * 特性：
- * - 跨季节平滑过渡（2s 淡入/淡出）
- * - 自动休眠（离开页面暂停，回到页面恢复）
- * - 自愈（异常后自动静默降级，不抛错）
+ * - 跨季节平滑淡入淡出
+ * - 页面隐藏自动暂停
+ * - 异常静默降级
+ * - 用户首次交互后自动解锁
  */
 
-const FADE_DURATION = 2.0; // 淡入淡出秒数
-
-// 12 节气 → 季节映射
-const SEASON_MAP = {
-  spring: { ids: [1, 2, 3, 4, 5, 6]  },
-  summer: { ids: [7, 8, 9, 10, 11, 12] },
-  autumn: { ids: [13, 14, 15, 16, 17, 18] },
-  winter: { ids: [19, 20, 21, 22, 23, 24] },
-};
+const FADE_DURATION = 1.8; // 淡入淡出秒数
+const MASTER_VOLUME = 0.08;
 
 export function getSeasonByTermId(termId) {
   if (termId >= 1 && termId <= 6) return 'spring';
@@ -33,44 +36,41 @@ export function getSeasonByTermId(termId) {
 export class SeasonalAmbience {
   constructor() {
     this._ctx = null;
+    this._masterGain = null;
+    this._noiseSource = null;
+    this._noiseFilter = null;
+    this._noiseGain = null;
+    this._toneOsc = null;
+    this._toneGain = null;
+    this._toneLfo = null;
+    this._toneLfoGain = null;
     this._currentSeason = null;
-    this._nodes = {
-      masterGain: null,
-      noiseSource: null,
-      noiseFilter: null,
-      noiseGain: null,
-      toneOsc: null,
-      toneGain: null,
-      toneLfo: null,
-      toneLfoGain: null,
-    };
-    this._targetVolumes = { noise: 0, tone: 0 };
-    this._currentVolumes = { noise: 0, tone: 0 };
+    this._targetVolume = 0;
+    this._currentVolume = 0;
     this._animId = null;
-    this._visible = true;
     this._started = false;
+    this._enabled = false; // 是否在启用页面（首页/黄道带）
+    this._unlocked = false;
     this._boundVisibility = null;
   }
 
   /**
-   * 初始化音频上下文（需用户交互后调用）
+   * 初始化音频上下文（无需用户交互也可调用，但 audioCtx.state === 'suspended'）
    */
   init() {
     if (this._ctx) return this._ctx;
     try {
       this._ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this._createGraph();
+      this._buildGraph();
       this._started = true;
 
-      // 监听页面可见性变化
+      // 监听页面可见性
       this._boundVisibility = () => this._onVisibilityChange();
       document.addEventListener('visibilitychange', this._boundVisibility);
-      window.addEventListener('pagehide', () => this._pause());
-      window.addEventListener('pageshow', () => this._resume());
 
       return this._ctx;
     } catch (e) {
-      console.warn('[Ambience] AudioContext init failed, ambient disabled:', e);
+      console.warn('[Ambience] AudioContext init failed:', e);
       this._ctx = null;
       this._started = false;
       return null;
@@ -78,61 +78,38 @@ export class SeasonalAmbience {
   }
 
   /**
-   * 构建音频节点图
+   * 解锁 AudioContext（需在用户交互后调用）
    */
-  _createGraph() {
-    if (!this._ctx) return;
-    const ctx = this._ctx;
-
-    // 主音量
-    this._nodes.masterGain = ctx.createGain();
-    this._nodes.masterGain.gain.value = 0.08;
-    this._nodes.masterGain.connect(ctx.destination);
-
-    // ── 白噪声通道（风声/雨声/雪声） ──
-    const bufSize = ctx.sampleRate * 0.5;
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const data = buf.getChannelData(0);
-    for (let i = 0; i < data.length; i++) {
-      data[i] = Math.random() * 2 - 1;
+  unlock() {
+    if (!this._ctx || this._unlocked) return;
+    if (this._ctx.state === 'suspended') {
+      this._ctx.resume().catch(() => {});
     }
-    this._nodes.noiseSource = ctx.createBufferSource();
-    this._nodes.noiseSource.buffer = buf;
-    this._nodes.noiseSource.loop = true;
+    this._unlocked = true;
+  }
 
-    this._nodes.noiseFilter = ctx.createBiquadFilter();
-    this._nodes.noiseFilter.type = 'lowpass';
-    this._nodes.noiseFilter.frequency.value = 500;
+  /**
+   * 启用环境音（在首页/黄道带调用）
+   * 总是尝试 resume AudioContext，因为离开期间 iOS Safari 等浏览器可能自动 suspend
+   */
+  enable() {
+    this._enabled = true;
+    // 总是尝试恢复 ctx（即使已 unlock，离开期间 ctx 可能被浏览器自动 suspend）
+    if (this._ctx && this._ctx.state === 'suspended') {
+      this._ctx.resume().catch(() => {});
+    }
+    this._unlocked = true;
+    if (this._currentSeason) {
+      this._targetVolume = MASTER_VOLUME;
+    }
+  }
 
-    this._nodes.noiseGain = ctx.createGain();
-    this._nodes.noiseGain.gain.value = 0;
-
-    this._nodes.noiseSource.connect(this._nodes.noiseFilter);
-    this._nodes.noiseFilter.connect(this._nodes.noiseGain);
-    this._nodes.noiseGain.connect(this._nodes.masterGain);
-    this._nodes.noiseSource.start();
-
-    // ── 音调通道（鸟鸣/蝉鸣） ──
-    this._nodes.toneOsc = ctx.createOscillator();
-    this._nodes.toneOsc.type = 'sine';
-    this._nodes.toneOsc.frequency.value = 2000;
-
-    this._nodes.toneLfo = ctx.createOscillator();
-    this._nodes.toneLfo.type = 'sine';
-    this._nodes.toneLfo.frequency.value = 4;
-
-    this._nodes.toneLfoGain = ctx.createGain();
-    this._nodes.toneLfoGain.gain.value = 0;
-
-    this._nodes.toneGain = ctx.createGain();
-    this._nodes.toneGain.gain.value = 0;
-
-    this._nodes.toneLfo.connect(this._nodes.toneLfoGain);
-    this._nodes.toneLfoGain.connect(this._nodes.toneOsc.frequency);
-    this._nodes.toneOsc.connect(this._nodes.toneGain);
-    this._nodes.toneGain.connect(this._nodes.masterGain);
-    this._nodes.toneOsc.start();
-    this._nodes.toneLfo.start();
+  /**
+   * 禁用环境音（离开首页时调用）→ 1.8s 淡出后停止
+   */
+  disable() {
+    this._enabled = false;
+    this._targetVolume = 0;
   }
 
   /**
@@ -144,73 +121,93 @@ export class SeasonalAmbience {
     if (season === this._currentSeason) return;
     this._currentSeason = season;
 
-    // 确保 AudioContext 处于运行状态
-    if (this._ctx.state === 'suspended') {
-      this._ctx.resume().catch(() => {});
-    }
+    this.unlock();
 
     const params = this._getSeasonParams(season);
-    this._targetVolumes.noise = params.noiseVolume;
-    this._targetVolumes.tone = params.toneVolume;
     this._applyFilters(params);
 
-    // 如果已启动动画循环，无需重复启动
-    if (!this._animId) {
-      this._startFadeLoop();
+    // 启用时才把目标音量调高
+    if (this._enabled) {
+      this._targetVolume = MASTER_VOLUME;
     }
   }
 
   /**
-   * 获取季节参数
-   * 参考 white-noises.com 的白噪音色调分类：
-   * - 春：雨声（rain）+ 鸟鸣（birds）→ 高频噪音 + 啁啾调制
-   * - 夏：溪流（stream）+ 蝉鸣（crickets）→ 低频流水 + 高频颤音
-   * - 秋：风声（wind）+ 落叶（leaves rustle）→ 中频噪音 + 短促脉冲
-   * - 冬：风雪（storm）+ 寂静（silence）→ 低频呼啸 + 几乎无音调
+   * 构建音频图
+   */
+  _buildGraph() {
+    if (!this._ctx) return;
+    const ctx = this._ctx;
+
+    this._masterGain = ctx.createGain();
+    this._masterGain.gain.value = 0;
+    this._masterGain.connect(ctx.destination);
+
+    // 白噪声通道
+    const bufSize = ctx.sampleRate * 1.0;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) {
+      data[i] = Math.random() * 2 - 1;
+    }
+    this._noiseSource = ctx.createBufferSource();
+    this._noiseSource.buffer = buf;
+    this._noiseSource.loop = true;
+
+    this._noiseFilter = ctx.createBiquadFilter();
+    this._noiseFilter.type = 'lowpass';
+    this._noiseFilter.frequency.value = 500;
+    this._noiseFilter.Q.value = 0.5;
+
+    this._noiseGain = ctx.createGain();
+    this._noiseGain.gain.value = 0;
+
+    this._noiseSource.connect(this._noiseFilter);
+    this._noiseFilter.connect(this._noiseGain);
+    this._noiseGain.connect(this._masterGain);
+    this._noiseSource.start();
+
+    // 音调通道（鸟/蝉）
+    this._toneOsc = ctx.createOscillator();
+    this._toneOsc.type = 'sine';
+    this._toneOsc.frequency.value = 2000;
+
+    this._toneLfo = ctx.createOscillator();
+    this._toneLfo.type = 'sine';
+    this._toneLfo.frequency.value = 4;
+
+    this._toneLfoGain = ctx.createGain();
+    this._toneLfoGain.gain.value = 0;
+
+    this._toneGain = ctx.createGain();
+    this._toneGain.gain.value = 0;
+
+    this._toneLfo.connect(this._toneLfoGain);
+    this._toneLfoGain.connect(this._toneOsc.frequency);
+    this._toneOsc.connect(this._toneGain);
+    this._toneGain.connect(this._masterGain);
+    this._toneOsc.start();
+    this._toneLfo.start();
+
+    // 启动音量平滑循环
+    this._startFadeLoop();
+  }
+
+  /**
+   * 获取季节参数（参考 white-noises.com 的白噪音色调分类）
    */
   _getSeasonParams(season) {
     switch (season) {
       case 'spring':
-        return {
-          noiseVolume: 0.35,     // 细雨声
-          toneVolume: 0.25,      // 鸟鸣
-          noiseFreq: 1800,       // 中高频雨声
-          toneFreq: 3200,
-          lfoFreq: 5,
-          lfoDepth: 200,
-        };
+        return { noiseFreq: 1800, toneFreq: 3200, lfoFreq: 5,   lfoDepth: 250, toneGain: 0.5 };
       case 'summer':
-        return {
-          noiseVolume: 0.30,     // 潺潺溪流（低噪 + 中频白噪混合）
-          toneVolume: 0.40,      // 嘹亮蝉鸣
-          noiseFreq: 600,        // 低中频流水
-          toneFreq: 4800,
-          lfoFreq: 6,
-          lfoDepth: 600,
-        };
+        return { noiseFreq: 600,  toneFreq: 4800, lfoFreq: 6,   lfoDepth: 600, toneGain: 0.7 };
       case 'autumn':
-        return {
-          noiseVolume: 0.42,     // 秋风
-          toneVolume: 0.18,      // 稀疏落叶声
-          noiseFreq: 1100,       // 中频风声
-          toneFreq: 700,
-          lfoFreq: 3,
-          lfoDepth: 180,
-        };
+        return { noiseFreq: 1100, toneFreq: 700,  lfoFreq: 3,   lfoDepth: 180, toneGain: 0.3 };
       case 'winter':
-        return {
-          noiseVolume: 0.50,     // 寒风呼啸
-          toneVolume: 0.05,      // 几乎无音调（冬夜寂静）
-          noiseFreq: 280,        // 低频风声
-          toneFreq: 200,
-          lfoFreq: 1.2,
-          lfoDepth: 80,
-        };
+        return { noiseFreq: 280,  toneFreq: 200,  lfoFreq: 1.2, lfoDepth: 80,  toneGain: 0.1 };
       default:
-        return {
-          noiseVolume: 0, toneVolume: 0, noiseFreq: 500,
-          toneFreq: 2000, lfoFreq: 4, lfoDepth: 0,
-        };
+        return { noiseFreq: 500, toneFreq: 2000, lfoFreq: 4, lfoDepth: 0, toneGain: 0 };
     }
   }
 
@@ -218,42 +215,44 @@ export class SeasonalAmbience {
    * 应用滤波器参数
    */
   _applyFilters(params) {
-    if (!this._nodes.noiseFilter) return;
+    if (!this._ctx || !this._noiseFilter) return;
     const now = this._ctx.currentTime;
-    this._nodes.noiseFilter.frequency.linearRampToValueAtTime(params.noiseFreq, now + FADE_DURATION);
-    if (this._nodes.toneOsc) {
-      this._nodes.toneOsc.frequency.linearRampToValueAtTime(params.toneFreq, now + FADE_DURATION);
+    this._noiseFilter.frequency.cancelScheduledValues(now);
+    this._noiseFilter.frequency.linearRampToValueAtTime(params.noiseFreq, now + FADE_DURATION);
+    if (this._toneOsc) {
+      this._toneOsc.frequency.cancelScheduledValues(now);
+      this._toneOsc.frequency.linearRampToValueAtTime(params.toneFreq, now + FADE_DURATION);
     }
-    if (this._nodes.toneLfo) {
-      this._nodes.toneLfo.frequency.linearRampToValueAtTime(params.lfoFreq, now + FADE_DURATION);
+    if (this._toneLfo) {
+      this._toneLfo.frequency.cancelScheduledValues(now);
+      this._toneLfo.frequency.linearRampToValueAtTime(params.lfoFreq, now + FADE_DURATION);
     }
-    if (this._nodes.toneLfoGain) {
-      this._nodes.toneLfoGain.gain.linearRampToValueAtTime(params.lfoDepth, now + FADE_DURATION);
+    if (this._toneLfoGain) {
+      this._toneLfoGain.gain.cancelScheduledValues(now);
+      this._toneLfoGain.gain.linearRampToValueAtTime(params.lfoDepth, now + FADE_DURATION);
+    }
+    if (this._toneGain) {
+      this._toneGain.gain.cancelScheduledValues(now);
+      this._toneGain.gain.linearRampToValueAtTime(params.toneGain, now + FADE_DURATION);
     }
   }
 
   /**
-   * 启动淡入/淡出动画循环
+   * 启动音量平滑循环
    */
   _startFadeLoop() {
     if (this._animId) return;
     const tick = () => {
-      // 更新噪声增益
-      const ng = this._nodes.noiseGain;
-      const tg = this._nodes.toneGain;
-      if (ng) {
-        const diff = this._targetVolumes.noise - this._currentVolumes.noise;
-        this._currentVolumes.noise += diff * 0.05; // 指数平滑
-        if (Math.abs(diff) > 0.001) {
-          ng.gain.value = this._currentVolumes.noise;
-        }
+      if (!this._ctx || !this._masterGain) {
+        this._animId = null;
+        return;
       }
-      if (tg) {
-        const diff = this._targetVolumes.tone - this._currentVolumes.tone;
-        this._currentVolumes.tone += diff * 0.05;
-        if (Math.abs(diff) > 0.001) {
-          tg.gain.value = this._currentVolumes.tone;
-        }
+      const diff = this._targetVolume - this._currentVolume;
+      if (Math.abs(diff) > 0.0005) {
+        this._currentVolume += diff * 0.05;
+        try {
+          this._masterGain.gain.value = this._currentVolume;
+        } catch (_) {}
       }
       this._animId = requestAnimationFrame(tick);
     };
@@ -261,30 +260,31 @@ export class SeasonalAmbience {
   }
 
   /**
-   * 暂停（页面隐藏时）
+   * 暂停（页面隐藏）
    */
   _pause() {
-    if (!this._nodes.masterGain) return;
+    if (!this._masterGain) return;
     try {
-      this._nodes.masterGain.gain.value = 0;
+      this._masterGain.gain.value = 0;
+      this._currentVolume = 0;
     } catch (_) {}
   }
 
   /**
-   * 恢复（页面显示时）
+   * 恢复（页面显示）
    */
   _resume() {
-    if (!this._nodes.masterGain || !this._currentSeason) return;
+    if (!this._masterGain || !this._enabled) return;
     try {
       if (this._ctx && this._ctx.state === 'suspended') {
         this._ctx.resume().catch(() => {});
       }
-      this._nodes.masterGain.gain.value = 0.08;
+      this._targetVolume = MASTER_VOLUME;
     } catch (_) {}
   }
 
   /**
-   * 可见性变化处理
+   * 可见性变化
    */
   _onVisibilityChange() {
     if (document.hidden) {
@@ -295,20 +295,20 @@ export class SeasonalAmbience {
   }
 
   /**
-   * 销毁释放
+   * 完全销毁
    */
   destroy() {
-    this._targetVolumes = { noise: 0, tone: 0 };
-    this._currentVolumes = { noise: 0, tone: 0 };
+    this._targetVolume = 0;
+    this._currentVolume = 0;
 
     if (this._animId) {
       cancelAnimationFrame(this._animId);
       this._animId = null;
     }
     try {
-      if (this._nodes.noiseSource) this._nodes.noiseSource.stop();
-      if (this._nodes.toneOsc) this._nodes.toneOsc.stop();
-      if (this._nodes.toneLfo) this._nodes.toneLfo.stop();
+      if (this._noiseSource) this._noiseSource.stop();
+      if (this._toneOsc) this._toneOsc.stop();
+      if (this._toneLfo) this._toneLfo.stop();
     } catch (_) {}
 
     if (this._ctx) {
@@ -318,16 +318,21 @@ export class SeasonalAmbience {
 
     if (this._boundVisibility) {
       document.removeEventListener('visibilitychange', this._boundVisibility);
-      window.removeEventListener('pagehide', () => this._pause());
-      window.removeEventListener('pageshow', () => this._resume());
+      this._boundVisibility = null;
     }
 
-    this._nodes = {
-      masterGain: null, noiseSource: null, noiseFilter: null, noiseGain: null,
-      toneOsc: null, toneGain: null, toneLfo: null, toneLfoGain: null,
-    };
+    this._masterGain = null;
+    this._noiseSource = null;
+    this._noiseFilter = null;
+    this._noiseGain = null;
+    this._toneOsc = null;
+    this._toneGain = null;
+    this._toneLfo = null;
+    this._toneLfoGain = null;
     this._currentSeason = null;
     this._started = false;
+    this._enabled = false;
+    this._unlocked = false;
   }
 }
 

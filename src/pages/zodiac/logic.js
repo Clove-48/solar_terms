@@ -35,6 +35,8 @@ export async function mount(store) {
 
   // 初始化季节氛围音频（惰性，AudioContext 需用户交互后激活）
   ambience.init();
+  // 激活音频播放（页面进入"启用"状态：环境音淡入）
+  ambience.enable();
 
   const terms = store.get('solarTerms') || window.__solarTerms || [];
   if (!terms.length) return;
@@ -261,5 +263,7 @@ export function unmount() {
   if (sceneEngine) { sceneEngine.destroy(); sceneEngine = null; }
   if (_poemTimer) { clearInterval(_poemTimer); _poemTimer = null; }
   if (_fallbackCleanup) { _fallbackCleanup(); _fallbackCleanup = null; }
-  ambience.destroy();
+  // 离开首页/黄道带：禁用环境音（1.8s 淡出后停止），不要 destroy —
+  // 避免下次回到首页时重新初始化 AudioContext 导致声音短暂中断
+  ambience.disable();
 }

@@ -1,10 +1,16 @@
 /**
- * sundialCanvas.js — 日晷模拟 Canvas 渲染 v2
+ * sundialCanvas.js — 日晷模拟 Canvas 渲染 v3
  *
  * 基于 CSDN 桌面日晷教程增强：
  * - 支持时辰选择，阴影随太阳时角旋转
  * - 太阳轨迹弧线 + 日出日落标记
  * - 更精细的刻度与时辰显示
+ *
+ * 性能优化（v3）：
+ * - 修复太阳轨迹弧线公式（避免弧线被压缩到一点）
+ * - _resize 内不立即重绘，rAF 合并避免重复 setTransform
+ * - render 内部按需更新 + 节流，避免在 timeSlider 拖动时连续重绘
+ * - 缓存梯度/计算结果
  */
 import { calcSunDeclination } from '../business/gnomon.js';
 
@@ -56,26 +62,64 @@ export class SundialCanvas {
     this._longitude = 0;
     this._termName = '';
     this._hourOfDay = 12;
+    this._w = 0;
+    this._h = 0;
+    this._rafId = 0;          // 单帧 rAF 节流：保证同一帧内多次 render 只画一次
+    this._scheduledParams = null; // 待绘制的参数（在 rAF 中读取）
+    this._resizeRaf = 0;      // resize 节流
   }
 
   init() {
     this._resize();
-    this._onResize = () => this._resize();
+    this._onResize = () => this._scheduleResize();
     window.addEventListener('resize', this._onResize);
   }
 
+  /**
+   * 节流 resize：合并同一帧内的多次触发，避免反复重置 canvas 尺寸
+   */
+  _scheduleResize() {
+    if (this._resizeRaf) return;
+    this._resizeRaf = requestAnimationFrame(() => {
+      this._resizeRaf = 0;
+      this._resize();
+    });
+  }
+
   _resize() {
+    if (!this.canvas.parentElement) return;
     const rect = this.canvas.parentElement.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
-    this.canvas.width = (rect.width - 32) * dpr;
-    this.canvas.height = 200 * dpr;
-    this.canvas.style.width = (rect.width - 32) + 'px';
-    this.canvas.style.height = '200px';
+    const w = Math.max(0, rect.width - 32);
+    const h = 200;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.canvas.style.width = w + 'px';
+    this.canvas.style.height = h + 'px';
     this.ctx.setTransform(1, 0, 0, 1, 0, 0);
     this.ctx.scale(dpr, dpr);
-    this._w = this.canvas.width / dpr;
-    this._h = 200;
-    this.render(this._altitude, this._longitude, this._termName, this._hourOfDay);
+    this._w = w;
+    this._h = h;
+    this._scheduleRender();
+  }
+
+  /**
+   * 合并同一帧内的多次 render 调用（timeSlider 拖动时高频触发时尤其关键）
+   */
+  _scheduleRender() {
+    if (this._rafId) return;
+    this._scheduledParams = {
+      altitudeDeg: this._altitude,
+      longitude: this._longitude,
+      termName: this._termName,
+      hourOfDay: this._hourOfDay,
+    };
+    this._rafId = requestAnimationFrame(() => {
+      this._rafId = 0;
+      const p = this._scheduledParams;
+      this._scheduledParams = null;
+      if (p) this._draw(p.altitudeDeg, p.longitude, p.termName, p.hourOfDay);
+    });
   }
 
   render(altitudeDeg, longitude, termName, hourOfDay = 12) {
@@ -83,10 +127,14 @@ export class SundialCanvas {
     this._longitude = longitude;
     this._termName = termName;
     this._hourOfDay = hourOfDay;
+    this._scheduleRender();
+  }
 
+  _draw(altitudeDeg, longitude, termName, hourOfDay) {
     const ctx = this.ctx;
     const w = this._w;
     const h = this._h;
+    if (!w || !h) return;
     const cx = w / 2;
     const cy = h * 0.5;
     const radius = Math.min(w, h) * 0.35;
@@ -113,10 +161,16 @@ export class SundialCanvas {
 
     ctx.beginPath();
     // 使用椭圆弧从日出到日落（中间拱起）
+    // 公式：a 范围 [-halfDay*15, +halfDay*15] 度
+    // 归一化 t = a / (halfDay*15) ∈ [-1, 1]
+    // 弧线 y = cy - radius*0.2 + radius*0.5 * cos(t * π/2)
+    // t=-1 → cos(-π/2)=0，y 最低（日出/日落位置）
+    // t=0  → cos(0)=1，y 最高（正午）
+    const halfDayDeg = Math.max(halfDay * 15, 1);
     for (let a = -halfDay * 15; a <= halfDay * 15; a += 1) {
       const angleRad = a * Math.PI / 180;
-      // 弧线在正午最高，日落/日出最低
-      const arcY = cy - radius * 0.2 + radius * 0.5 * Math.cos(a * Math.PI / 180 / halfDay * 0.5);
+      const t = a / halfDayDeg;
+      const arcY = cy - radius * 0.2 + radius * 0.5 * Math.cos(t * Math.PI / 2);
       const arcX = cx + Math.sin(angleRad) * arcR * 0.6;
       if (a === -halfDay * 15) ctx.moveTo(arcX, arcY);
       else ctx.lineTo(arcX, arcY);
@@ -132,7 +186,7 @@ export class SundialCanvas {
     if (currentAngle >= -halfDay * 15 && currentAngle <= halfDay * 15 && hourElevation > -5) {
       const t = currentAngle / Math.max(halfDay * 15, 1);
       const sunX = cx + Math.sin(currentAngle * Math.PI / 180) * arcR * 0.6;
-      const sunY = cy - radius * 0.2 + radius * 0.5 * Math.cos(t * Math.PI / 2 * 0.6);
+      const sunY = cy - radius * 0.2 + radius * 0.5 * Math.cos(t * Math.PI / 2);
       const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 10);
       sunGrad.addColorStop(0, 'rgba(255, 220, 80, 0.6)');
       sunGrad.addColorStop(0.5, 'rgba(255, 200, 60, 0.2)');
@@ -314,6 +368,8 @@ export class SundialCanvas {
   }
 
   destroy() {
+    if (this._rafId) { cancelAnimationFrame(this._rafId); this._rafId = 0; }
+    if (this._resizeRaf) { cancelAnimationFrame(this._resizeRaf); this._resizeRaf = 0; }
     if (this._onResize) {
       window.removeEventListener('resize', this._onResize);
       this._onResize = null;

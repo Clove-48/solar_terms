@@ -17,6 +17,7 @@ let _cleanupFns = [];
 let _chartCanvas = null;
 let _chartTerms = [];
 let _currentSundialTerm = null;
+let _applyTermChartRaf = 0; // 节气切换时合并柱状图重绘的 rAF 句柄
 
 export async function mount(store) {
   const terms = store.get('solarTerms') || window.__solarTerms || [];
@@ -40,12 +41,21 @@ export async function mount(store) {
 
   const slider = document.getElementById('date-slider');
   if (slider) {
+    let sliderRaf = 0;
     const onSliderInput = () => {
       const day = parseInt(slider.value);
-      updateGnomon(day);
+      // rAF 节流：拖动日期滑块时合并同一帧内的多次触发
+      if (sliderRaf) return;
+      sliderRaf = requestAnimationFrame(() => {
+        sliderRaf = 0;
+        updateGnomon(day);
+      });
     };
     slider.addEventListener('input', onSliderInput);
-    _cleanupFns.push(() => slider.removeEventListener('input', onSliderInput));
+    _cleanupFns.push(() => {
+      slider.removeEventListener('input', onSliderInput);
+      if (sliderRaf) { cancelAnimationFrame(sliderRaf); sliderRaf = 0; }
+    });
     updateGnomon(80);
   }
 
@@ -70,10 +80,20 @@ export async function mount(store) {
     _chartCanvas.addEventListener('click', onChartClick);
     _cleanupFns.push(() => _chartCanvas.removeEventListener('click', onChartClick));
 
-    // 窗口大小变化时重绘
-    const onChartResize = () => renderShadowChart(_chartCanvas, _chartTerms, null, null);
+    // 窗口大小变化时重绘（rAF 节流：合并同一帧内多次触发，避免连续重绘卡顿）
+    let chartResizeRaf = 0;
+    const onChartResize = () => {
+      if (chartResizeRaf) return;
+      chartResizeRaf = requestAnimationFrame(() => {
+        chartResizeRaf = 0;
+        renderShadowChart(_chartCanvas, _chartTerms, null, null);
+      });
+    };
     window.addEventListener('resize', onChartResize);
-    _cleanupFns.push(() => window.removeEventListener('resize', onChartResize));
+    _cleanupFns.push(() => {
+      window.removeEventListener('resize', onChartResize);
+      if (chartResizeRaf) { cancelAnimationFrame(chartResizeRaf); chartResizeRaf = 0; }
+    });
   }
 
   // ── 视频科普：圭表测影（详情页式样卷轴） ──
@@ -103,16 +123,24 @@ export async function mount(store) {
   const getShichenName = (h) => SHICHEN_NAMES[Math.floor(((h + 1) % 24) / 2)];
 
   if (timeSlider) {
+    let timeSliderRaf = 0;
     const onTimeSliderInput = () => {
       const h = parseInt(timeSlider.value);
       const shichen = getShichenName(h);
       if (shichenLabel) shichenLabel.textContent = `${shichen}时 (${String(h).padStart(2,'0')}:00)`;
-      if (_currentSundialTerm) {
-        requestAnimationFrame(() => renderSundial(_currentSundialTerm, h));
-      }
+      if (!_currentSundialTerm) return;
+      // rAF 节流：拖动滑块时只画最新一帧
+      if (timeSliderRaf) return;
+      timeSliderRaf = requestAnimationFrame(() => {
+        timeSliderRaf = 0;
+        renderSundial(_currentSundialTerm, h);
+      });
     };
     timeSlider.addEventListener('input', onTimeSliderInput);
-    _cleanupFns.push(() => timeSlider.removeEventListener('input', onTimeSliderInput));
+    _cleanupFns.push(() => {
+      timeSlider.removeEventListener('input', onTimeSliderInput);
+      if (timeSliderRaf) { cancelAnimationFrame(timeSliderRaf); timeSliderRaf = 0; }
+    });
   }
 
   const toggleBtn = document.getElementById('sundial-term-toggle');
@@ -167,9 +195,13 @@ export async function mount(store) {
       const currentHour = timeSlider ? parseInt(timeSlider.value) : 12;
       // 使用 requestAnimationFrame 让数据卡片先更新，再异步重绘 canvas，避免同步渲染卡顿
       requestAnimationFrame(() => renderSundial(term, currentHour));
-      // 同步刷新影长柱状图高亮
+      // 同步刷新影长柱状图高亮（节气快速切换时也用 rAF 合并）
       if (_chartCanvas) {
-        renderShadowChart(_chartCanvas, _chartTerms, id, null);
+        if (_applyTermChartRaf) cancelAnimationFrame(_applyTermChartRaf);
+        _applyTermChartRaf = requestAnimationFrame(() => {
+          _applyTermChartRaf = 0;
+          renderShadowChart(_chartCanvas, _chartTerms, id, null);
+        });
       }
     };
     applyTerm(currentId);
@@ -332,4 +364,7 @@ export function unmount() {
   // 清理所有注册的事件监听器，避免多次进出页面后累积导致卡顿
   _cleanupFns.forEach(fn => { try { fn(); } catch (_) {} });
   _cleanupFns = [];
+  if (_applyTermChartRaf) { cancelAnimationFrame(_applyTermChartRaf); _applyTermChartRaf = 0; }
+  _chartCanvas = null;
+  _currentSundialTerm = null;
 }
