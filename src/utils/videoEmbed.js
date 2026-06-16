@@ -171,25 +171,37 @@ function setupVideoToggle(container) {
 }
 
 /**
- * 滚动可见性观察：进入视口恢复播放，离开视口暂停
+ * 滚动可见性观察：进入视口恢复 iframe 加载，离开视口 blank 掉以停止播放
+ *
+ * B站 iframe embed 不支持 postMessage 的 { type: 'play'/'pause' } 控制；
+ * 改用 src 清空/恢复的方式：离开视口 src → "about:blank" 强制暂停，
+ * 回到视口从 data-orig-src 恢复原始链接。
  */
 function setupVideoObserver(container) {
   const videoContainer = container;
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       const targetIframe = entry.target.querySelector('.guo-video-embed');
-      if (!targetIframe || !targetIframe.src) return;
-      try {
-        if (entry.isIntersecting) {
-          targetIframe.contentWindow.postMessage({ type: 'play' }, '*');
-        } else {
-          targetIframe.contentWindow.postMessage({ type: 'pause' }, '*');
+      if (!targetIframe) return;
+
+      if (entry.isIntersecting) {
+        // 回到视口 → 从 data-orig-src 恢复
+        const origSrc = targetIframe.dataset.origSrc;
+        if (origSrc && targetIframe.src !== origSrc) {
+          try { targetIframe.src = origSrc; } catch (_) {}
         }
-      } catch (e) {
-        // 跨域错误静默忽略
+      } else {
+        // 离开视口 → blank 掉，记录原始 src
+        const current = targetIframe.src;
+        if (current && !current.startsWith('about:')) {
+          try {
+            targetIframe.dataset.origSrc = current;
+            targetIframe.src = 'about:blank';
+          } catch (_) {}
+        }
       }
     });
-  }, { threshold: 0.3 });
+  }, { threshold: 0.2 });
   observer.observe(videoContainer);
   videoContainer._videoObserver = observer;
 }

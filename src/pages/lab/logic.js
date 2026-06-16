@@ -227,85 +227,94 @@ export async function mount(store) {
     };
     applyTerm(currentId);
 
-    // ── 下拉面板：使用 position: fixed 弹出，逃出 overflow:auto 容器 + 视频容器遮挡 ──
-    // 注入一次性的 CSS：把面板提升为 fixed，并通过 CSS 变量定位
-    const POS_STYLE_ID = 'lab-term-picker-pos-style';
-    if (!document.getElementById(POS_STYLE_ID)) {
-      const styleEl = document.createElement('style');
-      styleEl.id = POS_STYLE_ID;
-      styleEl.textContent = `
-        .term-picker-panel.is-open {
-          position: fixed !important;
-          z-index: 9999 !important;
-          top: var(--lab-picker-top, 0px) !important;
-          left: var(--lab-picker-left, 0px) !important;
-          width: var(--lab-picker-width, 0px) !important;
-          max-height: min(60vh, 360px) !important;
-        }
-        .term-picker-panel.is-open[hidden] {
-          display: block !important;
-        }
-      `;
-      document.head.appendChild(styleEl);
-    }
+    // ── 下拉面板：teleport 到 body 以彻底跳出 iframe 层叠遮挡 ──
+    const originalParent = panel.parentNode;
+    const originalNextSibling = panel.nextSibling;
 
     let isOpen = false;
     let repositionRaf = 0;
 
-    const positionPanel = () => {
+    const teleportOpen = () => {
+      if (isOpen) return;
+      isOpen = true;
+
+      // 把面板切到 body，脱离原容器（overflow / iframe 层叠问题）
+      panel.remove();
+      document.body.appendChild(panel);
+
+      // 根据 toggle 按钮定位
+      const rect = toggleBtn.getBoundingClientRect();
+      Object.assign(panel.style, {
+        position: 'fixed',
+        top: `${rect.bottom + 6}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        maxHeight: 'min(60vh, 360px)',
+        zIndex: '99999',
+      });
+      panel.classList.add('is-open');
+      panel.hidden = false;
+      toggleBtn.setAttribute('aria-expanded', 'true');
+      toggleBtn.classList.add('open');
+
+      // 滚动到当前选中项
+      const active = panel.querySelector('.term-picker-chip.active');
+      if (active && typeof active.scrollIntoView === 'function') {
+        try { active.scrollIntoView({ block: 'nearest', behavior: 'auto' }); } catch (_) {}
+      }
+    };
+
+    const teleportClose = () => {
+      if (!isOpen) return;
+      isOpen = false;
+
+      // 移除内联定位样式
+      panel.style.position = '';
+      panel.style.top = '';
+      panel.style.left = '';
+      panel.style.width = '';
+      panel.style.maxHeight = '';
+      panel.style.zIndex = '';
+      panel.classList.remove('is-open');
+      panel.hidden = true;
+      toggleBtn.setAttribute('aria-expanded', 'false');
+      toggleBtn.classList.remove('open');
+
+      // 移回原始父节点
+      panel.remove();
+      if (originalNextSibling && originalNextSibling.parentNode === originalParent) {
+        originalParent.insertBefore(panel, originalNextSibling);
+      } else {
+        originalParent.appendChild(panel);
+      }
+    };
+
+    const repositionPanel = () => {
       if (!isOpen) return;
       const rect = toggleBtn.getBoundingClientRect();
-      const top = rect.bottom + 6;
-      const left = rect.left;
-      const width = rect.width;
-      panel.style.setProperty('--lab-picker-top', `${top}px`);
-      panel.style.setProperty('--lab-picker-left', `${left}px`);
-      panel.style.setProperty('--lab-picker-width', `${width}px`);
+      panel.style.top = `${rect.bottom + 6}px`;
+      panel.style.left = `${rect.left}px`;
+      panel.style.width = `${rect.width}px`;
     };
     const scheduleReposition = () => {
       if (repositionRaf) return;
       repositionRaf = requestAnimationFrame(() => {
         repositionRaf = 0;
-        positionPanel();
+        repositionPanel();
       });
-    };
-
-    const openPanel = () => {
-      if (isOpen) return;
-      isOpen = true;
-      positionPanel();
-      panel.classList.add('is-open');
-      panel.hidden = false;
-      toggleBtn.setAttribute('aria-expanded', 'true');
-      toggleBtn.classList.add('open');
-      // 滚动到当前选中项（仅在不可见时滚动，避免强制滚动吞掉移动端的点击）
-      const active = panel.querySelector('.term-picker-chip.active');
-      if (active && typeof active.scrollIntoView === 'function') {
-        try {
-          active.scrollIntoView({ block: 'nearest', behavior: 'auto' });
-        } catch (_) { /* ignore */ }
-      }
-    };
-    const closePanel = () => {
-      if (!isOpen) return;
-      isOpen = false;
-      panel.classList.remove('is-open');
-      panel.hidden = true;
-      toggleBtn.setAttribute('aria-expanded', 'false');
-      toggleBtn.classList.remove('open');
     };
 
     const onToggleClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      if (isOpen) closePanel(); else openPanel();
+      if (isOpen) teleportClose(); else teleportOpen();
     };
     toggleBtn.addEventListener('click', onToggleClick);
     _cleanupFns.push(() => toggleBtn.removeEventListener('click', onToggleClick));
 
     const onDocClick = (e) => {
       if (!isOpen) return;
-      if (picker && !picker.contains(e.target)) closePanel();
+      if (picker && !picker.contains(e.target) && !panel.contains(e.target)) teleportClose();
     };
     document.addEventListener('click', onDocClick);
     _cleanupFns.push(() => document.removeEventListener('click', onDocClick));
@@ -313,22 +322,23 @@ export async function mount(store) {
     const onPanelClick = (e) => {
       const chip = e.target.closest('.term-picker-chip');
       if (!chip) return;
-      // 阻止冒泡到 document：避免 document click 处理器在 chip click 之后误触发关闭
       e.stopPropagation();
       const id = Number(chip.dataset.termId);
       applyTerm(id);
-      closePanel();
+      teleportClose();
     };
     panel.addEventListener('click', onPanelClick);
     _cleanupFns.push(() => panel.removeEventListener('click', onPanelClick));
 
-    // 滚动/缩放时重新定位（rAF 合并）；列表本身的滚动交给 panel 的 overflow-y
+    // 滚动/缩放时重新定位
     window.addEventListener('resize', scheduleReposition);
     window.addEventListener('scroll', scheduleReposition, true);
     _cleanupFns.push(() => {
       window.removeEventListener('resize', scheduleReposition);
       window.removeEventListener('scroll', scheduleReposition, true);
       if (repositionRaf) { cancelAnimationFrame(repositionRaf); repositionRaf = 0; }
+      // 确保 unmount 时面板不在 body 上遗留
+      if (isOpen) teleportClose();
     });
   }
 }

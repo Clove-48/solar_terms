@@ -304,6 +304,7 @@ export class Router {
 
     this._store.set('prevPage', this._currentPage);
     const prevPage = this._currentPage;
+    const prevQuery = this._currentQuery;
     this._currentPage = hash;
     this._currentQuery = queryString;
 
@@ -311,6 +312,14 @@ export class Router {
     if (!route) {
       location.hash = '#loading';
       return;
+    }
+
+    // 卸载上一个页面（先 unmount 再替换 DOM，确保 iframe/audio/事件等正确清理）
+    if (prevPage) {
+      const prevRoute = this._routes.get(prevPage);
+      if (prevRoute && prevRoute.loaded && prevRoute.module && prevRoute.module.unmount) {
+        try { await prevRoute.module.unmount(); } catch (e) { console.warn('[Router] unmount error:', e); }
+      }
     }
 
     // 加载页面模块
