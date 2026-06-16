@@ -155,24 +155,18 @@ export class SundialCanvas {
 
     // ── 太阳轨迹弧线（从日出到日落） ──
     const arcR = radius * 0.65;
-    // 日出/日落位置在地平线上（东/西两侧）
-    const sunriseAngle = -Math.min(halfDay * 15, 90) * Math.PI / 180; // 左侧（东）
-    const sunsetAngle = Math.min(halfDay * 15, 90) * Math.PI / 180;   // 右侧（西）
+    // 日出位置在东（右侧），日落在西（左侧）
 
     ctx.beginPath();
-    // 使用椭圆弧从日出到日落（中间拱起）
-    // 公式：a 范围 [-halfDay*15, +halfDay*15] 度
-    // 归一化 t = a / (halfDay*15) ∈ [-1, 1]
-    // 弧线 y = cy - radius*0.2 + radius*0.5 * cos(t * π/2)
-    // t=-1 → cos(-π/2)=0，y 最低（日出/日落位置）
-    // t=0  → cos(0)=1，y 最高（正午）
+    // 使用椭圆弧从日出（东/右）到日落（西/左），中间拱起
+    // 公式：a 从 +halfDay*15（东/右）递减到 -halfDay*15（西/左）
     const halfDayDeg = Math.max(halfDay * 15, 1);
-    for (let a = -halfDay * 15; a <= halfDay * 15; a += 1) {
+    for (let a = halfDay * 15; a >= -halfDay * 15; a -= 1) {
       const angleRad = a * Math.PI / 180;
-      const t = a / halfDayDeg;
+      const t = a / halfDayDeg; // +1 → -1 从东到西
       const arcY = cy - radius * 0.2 + radius * 0.5 * Math.cos(t * Math.PI / 2);
       const arcX = cx + Math.sin(angleRad) * arcR * 0.6;
-      if (a === -halfDay * 15) ctx.moveTo(arcX, arcY);
+      if (a === halfDay * 15) ctx.moveTo(arcX, arcY);
       else ctx.lineTo(arcX, arcY);
     }
     ctx.strokeStyle = 'rgba(255, 200, 100, 0.15)';
@@ -182,10 +176,11 @@ export class SundialCanvas {
     ctx.setLineDash([]);
 
     // 太阳当前位置标记
-    const currentAngle = (hourOfDay - 12) * 15;
-    if (currentAngle >= -halfDay * 15 && currentAngle <= halfDay * 15 && hourElevation > -5) {
-      const t = currentAngle / Math.max(halfDay * 15, 1);
-      const sunX = cx + Math.sin(currentAngle * Math.PI / 180) * arcR * 0.6;
+    // 取反：+90° → 东（右），-90° → 西（左），0° → 中（正午最高点）
+    const sunAngle = -(hourOfDay - 12) * 15;
+    if (sunAngle >= -halfDay * 15 && sunAngle <= halfDay * 15 && hourElevation > -5) {
+      const t = sunAngle / Math.max(halfDay * 15, 1);
+      const sunX = cx + Math.sin(sunAngle * Math.PI / 180) * arcR * 0.6;
       const sunY = cy - radius * 0.2 + radius * 0.5 * Math.cos(t * Math.PI / 2);
       const sunGrad = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 10);
       sunGrad.addColorStop(0, 'rgba(255, 220, 80, 0.6)');
@@ -216,9 +211,9 @@ export class SundialCanvas {
 
     // ── 日出/日落标记 ──
     const markR = radius * 0.92;
-    // 日出 (东 = 左侧，canvas坐标：左侧 = 180°方向)
-    const srAngleDeg = -Math.min(halfDay * 15, 90);
-    const ssAngleDeg = Math.min(halfDay * 15, 90);
+    // 日出在东（右侧），日落在西（左侧）
+    const srAngleDeg = Math.min(halfDay * 15, 90);
+    const ssAngleDeg = -Math.min(halfDay * 15, 90);
     [{deg: srAngleDeg, label: '日出', color: 'rgba(255, 160, 60, 0.4)'},
      {deg: ssAngleDeg, label: '日落', color: 'rgba(200, 100, 200, 0.4)'}
     ].forEach(({deg, label, color}) => {
@@ -265,8 +260,9 @@ export class SundialCanvas {
       ctx.stroke();
     }
 
-    // ── 时辰标注 ──
-    const hours = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+    // ── 时辰标注（赤道日晷盘面：逆时针排列） ──
+    const hours = ['卯','辰','巳','午','未','申','酉','戌','亥','子','丑','寅'];
+    // 逆时针从卯（西/左）开始 → 辰 → 巳 → 午（北/顶）→ 未 → 申 → 酉（东/右）→ 戌 → 亥 → 子（南/底）→ 丑 → 寅
     ctx.fillStyle = 'rgba(212, 165, 116, 0.35)';
     ctx.font = '9px "Noto Serif SC", serif';
     ctx.textAlign = 'center';
@@ -278,8 +274,8 @@ export class SundialCanvas {
       ctx.fillText(label, cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
     });
 
-    // ── 当前时辰高亮 ──
-    const shichenIdx = Math.floor(((hourOfDay + 1) % 24) / 2);
+    // ── 当前时辰高亮（映射到逆时针数组索引） ──
+    const shichenIdx = (Math.floor(((hourOfDay + 1) % 24) / 2) + 9) % 12; // 偏移到 ['卯'...] 顺序
     const hlAngle = (shichenIdx * 30 - 90) * Math.PI / 180;
     const hlR = radius * 0.94;
     ctx.beginPath();
