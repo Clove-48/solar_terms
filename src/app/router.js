@@ -197,6 +197,16 @@ const PAGES = {
               </div>
             </div>
           </div>
+          <!-- 时辰选择器 -->
+          <div style="display:flex;align-items:center;gap:var(--spacing-sm);margin-top:var(--spacing-sm);padding:0 var(--spacing-sm);">
+            <span class="data-label" style="color:var(--muted-ink);font-size:9px;white-space:nowrap;">卯时</span>
+            <input type="range" id="sundial-time-slider" min="0" max="23" value="12" style="flex:1;">
+            <span class="data-label" style="color:var(--muted-ink);font-size:9px;white-space:nowrap;">酉时</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:var(--spacing-xs);">
+            <span class="data-label" style="color:var(--accent-cyan);font-size:10px;" id="sundial-shichen-label">午时 (12:00)</span>
+            <span class="data-label" style="color:var(--accent-gold);font-size:10px;" id="sundial-sunrise-label">日出: --</span>
+          </div>
           <p class="body-science" style="margin-top:var(--spacing-md);font-size:13px;color:var(--muted-ink);line-height:1.6;">
             选择不同节气，观察日晷指针阴影随太阳高度角的变化。
           </p>

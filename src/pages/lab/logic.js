@@ -5,7 +5,7 @@
 import { GnomonCanvas } from '../../renderer/gnomonCanvas.js';
 import { SundialCanvas } from '../../renderer/sundialCanvas.js';
 import { calcSunDeclination, calcNoonAltitude, calcShadowLength, getShadowDescription } from '../../business/gnomon.js';
-import { calcDayLength, formatDayLength, calcDirectPoint, formatDirectPoint, getDayNightRatio } from '../../business/sunPosition.js';
+import { calcDayLength, formatDayLength, calcDirectPoint, formatDirectPoint, getDayNightRatio, calcSunriseSunset } from '../../business/sunPosition.js';
 import { getDataByDayOfYear } from '../../business/calendar.js';
 
 let gnomonCanvas = null;
@@ -51,6 +51,27 @@ export async function mount(store) {
     sundialCanvas.init();
   }
 
+  // 时辰选择器
+  const timeSlider = document.getElementById('sundial-time-slider');
+  const shichenLabel = document.getElementById('sundial-shichen-label');
+  const sunriseLabel = document.getElementById('sundial-sunrise-label');
+  const SHICHEN_NAMES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const getShichenName = (h) => SHICHEN_NAMES[Math.floor(((h + 1) % 24) / 2)];
+  let currentSundialTerm = null;
+
+  if (timeSlider) {
+    const onTimeSliderInput = () => {
+      const h = parseInt(timeSlider.value);
+      const shichen = getShichenName(h);
+      if (shichenLabel) shichenLabel.textContent = `${shichen}时 (${String(h).padStart(2,'0')}:00)`;
+      if (currentSundialTerm) {
+        requestAnimationFrame(() => renderSundial(currentSundialTerm, h));
+      }
+    };
+    timeSlider.addEventListener('input', onTimeSliderInput);
+    _cleanupFns.push(() => timeSlider.removeEventListener('input', onTimeSliderInput));
+  }
+
   const toggleBtn = document.getElementById('sundial-term-toggle');
   const labelEl = document.getElementById('sundial-term-label');
   const panel = document.getElementById('sundial-term-panel');
@@ -83,10 +104,13 @@ export async function mount(store) {
     const applyTerm = (id) => {
       const term = terms.find(t => t.id === id);
       if (!term) return;
+      currentSundialTerm = term;
       if (labelEl) labelEl.textContent = `${term.name} · 黄经 ${term.solarLongitude}°`;
       setActiveChip(id);
+      // 获取当前时间滑块值
+      const currentHour = timeSlider ? parseInt(timeSlider.value) : 12;
       // 使用 requestAnimationFrame 让数据卡片先更新，再异步重绘 canvas，避免同步渲染卡顿
-      requestAnimationFrame(() => renderSundial(term));
+      requestAnimationFrame(() => renderSundial(term, currentHour));
     };
     applyTerm(currentId);
 
@@ -201,7 +225,7 @@ function updateGnomon(day) {
 //  日晷模拟
 // ══════════════════════════════════════════
 
-function renderSundial(term) {
+function renderSundial(term, hourOfDay = 12) {
   if (!sundialCanvas) return;
   const longitude = term.solarLongitude;
 
@@ -210,6 +234,20 @@ function renderSundial(term) {
   const dayLength = calcDayLength(longitude);
   const directPoint = formatDirectPoint(longitude);
   const ratio = getDayNightRatio(longitude);
+
+  // 日出日落计算
+  const { sunrise, sunset } = calcSunriseSunset(longitude);
+  const sunriseLabel = document.getElementById('sundial-sunrise-label');
+  if (sunriseLabel) {
+    sunriseLabel.textContent = `日出 ${sunrise.toFixed(1)}h · 日落 ${sunset.toFixed(1)}h`;
+  }
+  const shichenLabel = document.getElementById('sundial-shichen-label');
+  if (shichenLabel) {
+    const shichenNames = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    const h = Math.round(hourOfDay);
+    const name = shichenNames[Math.floor(((h + 1) % 24) / 2)];
+    shichenLabel.textContent = `${name}时 (${String(h).padStart(2,'0')}:00)`;
+  }
 
   // 更新数据卡片
   const altEl = document.getElementById('sundial-altitude');
@@ -224,8 +262,8 @@ function renderSundial(term) {
   if (directEl) directEl.textContent = directPoint;
   if (ratioEl) ratioEl.textContent = `${ratio.dayPercent.toFixed(0)}% : ${ratio.nightPercent.toFixed(0)}%`;
 
-  // 更新 Canvas
-  sundialCanvas.render(altitude, longitude, term.name);
+  // 更新 Canvas（传入时辰）
+  sundialCanvas.render(altitude, longitude, term.name, hourOfDay);
 }
 
 export function unmount() {

@@ -7,6 +7,7 @@ import { SceneEngine } from '../../renderer/sceneEngine.js';
 import { events, EventTypes } from '../../app/events.js';
 import { initFallbackSystem } from '../../interaction/fallbackSystem.js';
 import { playTermSound, playPageTransition } from '../../business/soundEffects.js';
+import { ambience } from '../../business/seasonalAmbience.js';
 import poemData from '/data/poems.json';
 
 let zodiacCanvas = null;
@@ -31,6 +32,9 @@ export async function mount(store) {
     sceneEngine = new SceneEngine(sceneCanvas);
     sceneEngine.init();
   }
+
+  // 初始化季节氛围音频（惰性，AudioContext 需用户交互后激活）
+  ambience.init();
 
   const terms = store.get('solarTerms') || window.__solarTerms || [];
   if (!terms.length) return;
@@ -71,12 +75,16 @@ export async function mount(store) {
     const term = terms.find(t => t.id === newId);
     if (term) {
       updatePoetryDisplay(store, term);
-      if (sceneEngine) sceneEngine.setScene(getSeasonKey(term.id), term.name);
+      const season = getSeasonKey(term.id);
+      if (sceneEngine) sceneEngine.setScene(season, term.name);
+      ambience.setSeason(season);
     }
   });
 
   if (currentTerm && sceneEngine) {
-    sceneEngine.setScene(getSeasonKey(currentTerm.id), currentTerm.name);
+    const season = getSeasonKey(currentTerm.id);
+    sceneEngine.setScene(season, currentTerm.name);
+    ambience.setSeason(season);
   }
 }
 
@@ -253,4 +261,5 @@ export function unmount() {
   if (sceneEngine) { sceneEngine.destroy(); sceneEngine = null; }
   if (_poemTimer) { clearInterval(_poemTimer); _poemTimer = null; }
   if (_fallbackCleanup) { _fallbackCleanup(); _fallbackCleanup = null; }
+  ambience.destroy();
 }
