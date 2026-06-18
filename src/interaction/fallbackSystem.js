@@ -1,29 +1,14 @@
 /**
  * fallbackSystem.js — 交互辅助系统
  *
- * 统一调度 6 种交互模式：
+ * 统一调度 3 种交互模式：
  *   Mode 2: 左右滑动黄道带（已实现 via ZodiacCanvas）
  *   Mode 3: 点击节气卡片（已实现）
  *   Mode 4: 前后翻页按钮
- *   Mode 5: 摇一摇随机节气
- *   Mode 6: 拖拽节气到场景
  *   Mode 7: 日期选择器
  */
 
 import { getCurrentTermInfo } from '../business/calendar.js';
-
-/**
- * 检测设备能力
- * @returns {{touch: boolean, motion: boolean, weChat: boolean}}
- */
-export function detectCapabilities() {
-  return {
-    touch: 'ontouchstart' in window,
-    motion: !!window.DeviceMotionEvent,
-    weChat: /MicroMessenger/i.test(navigator.userAgent),
-    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  };
-}
 
 /**
  * 激活前后翻页按钮（Mode 4）
@@ -75,49 +60,6 @@ function navigateToTerm(termId, store, page) {
 }
 
 /**
- * 激活摇一摇随机节气（Mode 5）
- * @param {object} store
- * @param {Array} terms
- * @returns {Function} 清理函数
- */
-export function enableShakeToRandom(store, terms) {
-  if (!window.DeviceMotionEvent) return () => {};
-
-  let lastX = 0, lastY = 0, lastZ = 0;
-  let lastShakeTime = 0;
-  const SHAKE_THRESHOLD = 15;
-  const SHAKE_COOLDOWN = 2000;
-
-  function handleMotion(event) {
-    const acc = event.accelerationIncludingGravity;
-    if (!acc) return;
-
-    const { x, y, z } = acc;
-    const deltaX = Math.abs(x - lastX);
-    const deltaY = Math.abs(y - lastY);
-    const deltaZ = Math.abs(z - lastZ);
-
-    lastX = x; lastY = y; lastZ = z;
-
-    if ((deltaX > SHAKE_THRESHOLD && deltaY > SHAKE_THRESHOLD) ||
-        (deltaX > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD) ||
-        (deltaY > SHAKE_THRESHOLD && deltaZ > SHAKE_THRESHOLD)) {
-      const now = Date.now();
-      if (now - lastShakeTime < SHAKE_COOLDOWN) return;
-      lastShakeTime = now;
-
-      const randomTerm = terms[Math.floor(Math.random() * terms.length)];
-      if (randomTerm) {
-        location.hash = `#detail?term=${randomTerm.id}`;
-      }
-    }
-  }
-
-  window.addEventListener('devicemotion', handleMotion, false);
-  return () => window.removeEventListener('devicemotion', handleMotion);
-}
-
-/**
  * 激活日期选择器（Mode 7）
  * @param {HTMLElement} container
  * @param {Array} terms
@@ -150,55 +92,6 @@ export function enableDatePicker(container, terms) {
 }
 
 /**
- * 激活拖拽节气到场景（Mode 6）
- * @param {HTMLElement} container
- * @param {Array} terms
- * @returns {Function} 清理函数
- */
-export function enableDragToNavigate(container, terms) {
-  if (!container) return () => {};
-
-  const dragBar = document.createElement('div');
-  dragBar.className = 'fallback-drag-bar';
-  dragBar.innerHTML = `
-    <span class="drag-bar-hint">拖拽节气到上方 →</span>
-    <div class="drag-bar-terms">
-      ${terms.map(t => `
-        <div class="drag-term-chip" draggable="true" data-term-id="${t.id}">
-          ${t.name}
-        </div>
-      `).join('')}
-    </div>
-  `;
-
-  dragBar.querySelectorAll('.drag-term-chip').forEach(chip => {
-    chip.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', chip.dataset.termId);
-      chip.classList.add('dragging');
-    });
-    chip.addEventListener('dragend', () => {
-      chip.classList.remove('dragging');
-    });
-  });
-
-  container.appendChild(dragBar);
-
-  const dropZone = document.getElementById('zodiac-canvas');
-  if (dropZone) {
-    dropZone.addEventListener('dragover', (e) => e.preventDefault());
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const termId = parseInt(e.dataTransfer.getData('text/plain'));
-      if (termId) {
-        location.hash = `#detail?term=${termId}`;
-      }
-    });
-  }
-
-  return () => { dragBar.remove(); };
-}
-
-/**
  * 初始化交互辅助系统
  * @param {object} store
  * @param {Array} terms
@@ -206,27 +99,11 @@ export function enableDragToNavigate(container, terms) {
  * @returns {Function} 清理所有交互辅助的函数
  */
 export function initFallbackSystem(store, terms, page) {
-  const capabilities = detectCapabilities();
   const cleanups = [];
 
   // Mode 4: 前后翻页按钮（所有设备通用）
   const cleanup4 = enablePrevNextButtons(page, store, terms);
   if (cleanup4) cleanups.push(cleanup4);
-
-  // Mode 5: 摇一摇（支持 DeviceMotion）
-  if (capabilities.motion && page === 'zodiac') {
-    const cleanup5 = enableShakeToRandom(store, terms);
-    if (cleanup5) cleanups.push(cleanup5);
-  }
-
-  // Mode 6: 拖拽（仅黄道带页面）
-  if (page === 'zodiac') {
-    const dragContainer = document.getElementById('zodiac-page');
-    if (dragContainer) {
-      const cleanup6 = enableDragToNavigate(dragContainer, terms);
-      if (cleanup6) cleanups.push(cleanup6);
-    }
-  }
 
   // Mode 7: 日期选择器
   const dateContainer = page === 'zodiac'
